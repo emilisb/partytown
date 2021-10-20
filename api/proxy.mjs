@@ -15,7 +15,7 @@ export default function (request, response) {
         'user-agent': request.headers['user-agent'],
       };
 
-      fetch(proxyUrl, { headers }).then((proxyRsp) => {
+      fetch(proxyUrl, { headers: proxyHeaders }).then((proxyRsp) => {
         const headers = [
           'age',
           'cache-control',
