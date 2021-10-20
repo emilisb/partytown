@@ -16,25 +16,12 @@ export default function (request, response) {
       };
 
       fetch(proxyUrl, { headers: proxyHeaders }).then((proxyRsp) => {
-        const headers = [
-          'age',
-          'cache-control',
-          'content-type',
-          'date',
-          'etag',
-          'last-modified',
-          'x-cache',
-        ];
+        const headers = ['age', 'cache-control', 'content-type', 'date', 'etag', 'last-modified'];
         headers.forEach((headerName) => {
           if (proxyRsp.headers.has(headerName)) {
             response.setHeader(headerName, proxyRsp.headers.get(headerName));
           }
         });
-        if (proxyRsp.headers.has('server')) {
-          response.setHeader('server', `proxied (${proxyRsp.headers.get('server')})`);
-        } else {
-          response.setHeader('server', `proxied`);
-        }
         response.setHeader('Access-Control-Allow-Origin', '*');
         response.writeHead(proxyRsp.status);
 
