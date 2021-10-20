@@ -2,10 +2,10 @@ import fetch from 'node-fetch';
 
 export default function (request, response) {
   try {
-    if (!request.params.p) {
+    if (!request.query.p) {
       response.status(400).send(`Missing "p" querystring`);
     } else {
-      const proxyUrl = request.params.p;
+      const proxyUrl = request.query.p;
       fetch(proxyUrl).then((proxyRsp) => {
         const headers = [
           'age',
