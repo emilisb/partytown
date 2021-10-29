@@ -52,7 +52,7 @@
   <body>
     <h1 class="title">Document</h1>
     <ul>
-      <!-- <li>
+      <li>
         <strong>getElementById()</strong>
         <code id="testGetElementById"></code>
         <script type="text/partytown">
@@ -323,7 +323,7 @@
             elm.textContent = `${childNodes.length} [${node0.nodeName}(${node0.nodeType}), ${node1.nodeName}(${node1.nodeType})]`;
           })();
         </script>
-      </li> -->
+      </li>
 
       <li>
         <strong>DocumentType node</strong>
@@ -331,7 +331,6 @@
         <script type="text/partytown">
           (function () {
             const elm = document.getElementById('testDocType');
-            debugger;
             const doctype = document.doctype;
             const hasChildNodes = doctype.hasChildNodes();
             elm.textContent = doctype.nodeType + ' ' + doctype.nodeName + ' ' + doctype.name + ' ' + hasChildNodes;
@@ -339,7 +338,7 @@
         </script>
       </li>
 
-      <!-- <li>
+      <li>
         <strong>document.constructor.name</strong>
         <code id="testDocCstrName"></code>
         <script type="text/partytown">
@@ -380,7 +379,7 @@
         (function () {
           document.body.classList.add('completed');
         })();
-      </script> -->
+      </script>
     </ul>
 
     <hr />

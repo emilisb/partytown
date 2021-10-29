@@ -21,8 +21,7 @@ export const createInstance = (
       : interfaceType === InterfaceType.DocumentTypeNode
       ? NodeName.DocumentTypeNode
       : nodeName;
-
-  return new (getConstructor(interfaceType, nodeName))(interfaceType, instanceId, winId, nodeName);
+  return new (getConstructor(nodeName))(interfaceType, instanceId, winId, nodeName);
 };
 
 export const getOrCreateInstance = (
@@ -39,24 +38,21 @@ export const getOrCreateInstance = (
   return instance;
 };
 
-const getConstructor = (interfaceType: InterfaceType, nodeName?: string): typeof WorkerProxy => {
+const getConstructor = (nodeName?: string): typeof WorkerProxy => {
   if (nodeName) {
-    nodeName = nodeName.toLowerCase();
-    if (elementConstructors[nodeName!]) {
-      return elementConstructors[nodeName!];
+    if (nodeConstructors[nodeName!]) {
+      return nodeConstructors[nodeName!];
     } else if (nodeName!.includes('-')) {
-      return elementConstructors.unknown;
+      return nodeConstructors.UNKNOWN;
     } else {
       return (self as any).HTMLElement;
     }
-  } else if (interfaceType <= InterfaceType.DocumentFragmentNode) {
-    return (self as any).Node;
   } else {
     return WorkerProxy;
   }
 };
 
-export const elementConstructors: { [tagName: string]: any } = {};
+export const nodeConstructors: { [tagName: string]: any } = {};
 
 const constructorToTagMap: { [key: string]: string } = {
   ANCHOR: 'A',

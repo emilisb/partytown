@@ -6,7 +6,7 @@ export const readNodeConstructors = (win: any) => {
   const htmlCstrNames = Object.getOwnPropertyNames(win).filter((c) => /^HTML.+Element$/.test(c));
 
   const cstrNames =
-    `Node,CharacterData,Text,Comment,DocumentFragment,Element,HTMLElement,SVGElement,Document,HTMLDocument,HTMLMediaElement`
+    `Node,CharacterData,Text,Comment,DocumentFragment,Element,HTMLElement,SVGElement,Document,HTMLDocument,DocumentType,HTMLMediaElement`
       .split(',')
       .concat(htmlCstrNames);
 
@@ -90,15 +90,18 @@ const getDomImplementation = (
   } else if (cstrIndex === 4) {
     // DocumentFragment
     return docImpl.createDocumentFragment();
-  } else if (cstrIndex === 5 || cstrIndex === 6) {
+  } else if (cstrIndex < 7) {
     // Element / HTMLElement
     return docImpl.head;
   } else if (cstrIndex === 7) {
     // SVGElement
     return docImpl.createElementNS('http://www.w3.org/2000/svg', 'svg');
-  } else if (cstrIndex < 9) {
+  } else if (cstrIndex < 10) {
     // Document / HTMLDocument
     return docImpl;
+  } else if (cstrIndex === 10) {
+    // DocumentType
+    return docImpl.doctype;
   } else {
     // create an element from the tag name
     return docImpl.createElement(tagName!);

@@ -1,16 +1,7 @@
 import {} from './worker-state';
 import { defineConstructorName, EMPTY_ARRAY, getLastMemberName, logWorker } from '../utils';
-import { elementConstructors, getTagNameFromConstructor } from './worker-constructors';
-// import { HTMLAnchorElement } from './worker-anchor';
-// import { HTMLCanvasElement } from './worker-canvas';
-// import { HTMLElement } from './worker-element';
-// import { HTMLDocument } from './worker-document';
-// import { HTMLIFrameElement } from './worker-iframe';
-// import { HTMLScriptElement } from './worker-script';
-// import { HTMLStyleElement } from './worker-style';
+import { nodeConstructors } from './worker-constructors';
 import { cachedTree, InstanceIdKey, webWorkerCtx, WinIdKey } from './worker-constants';
-import { WorkerProxy } from './worker-proxy-constructor';
-// import { NodeProperties } from './worker-node';
 import { ElementDescriptorMap } from './worker-element';
 import { Node } from './worker-node';
 import { DocumentDescriptorMap } from './worker-document';
@@ -33,23 +24,6 @@ export const initWebWorker = (nodeCstrs: NodeConstructor[]) => {
 
   (self as any).postMessage = (self as any).importScripts = undefined;
 
-  // const HtmlElementCstr = ((self as any).Element = (self as any).HTMLElement = HTMLElement);
-
-  // const Node = createNodeConstructor(WorkerProxy);
-
-  // cachedTreeProps(((self as any).Node = Node), nodeTreePropNames);
-
-  // cachedTreeProps(((self as any).Node = Node), nodeTreePropNames);
-  // cachedDimensionProps(HtmlElementCstr);
-  // cachedDimensionMethods(HtmlElementCstr);
-  // cachedTreeProps(HtmlElementCstr, elementTreePropNames);
-
-  // (self as any).Document = HTMLDocument;
-
-  // create the same HTMLElement constructors that were found on main's window
-  // and add each constructor to the elementConstructors map, to be used by windows later
-  // console.log(nodeCstrs);
-
   (self as any).Node = Node;
 
   nodeCstrs.map((nodeCstr) => {
@@ -65,7 +39,7 @@ export const initWebWorker = (nodeCstrs: NodeConstructor[]) => {
       cstrName
     ));
 
-    elementConstructors[nodeName.toLowerCase()] = Cstr;
+    nodeConstructors[nodeName] = Cstr;
 
     members.map(([memberName, memberType, staticValue]) => {
       if (!(memberName in Cstr.prototype)) {
@@ -74,7 +48,12 @@ export const initWebWorker = (nodeCstrs: NodeConstructor[]) => {
           defineProxyProperty(Cstr, memberName, memberType);
         } else {
           // interface type
-          if (memberType === InterfaceType.Property) {
+          if (memberType === InterfaceType.Function) {
+            // method that should access main
+            defineValueProperty(Cstr, memberName, function (this: Node, ...args: any[]) {
+              return callMethod(this, [memberName], args);
+            });
+          } else if (memberType > 0) {
             // property
             if (staticValue !== undefined) {
               // static property that doesn't change
@@ -91,11 +70,6 @@ export const initWebWorker = (nodeCstrs: NodeConstructor[]) => {
                 },
               });
             }
-          } else if (memberType === InterfaceType.Function) {
-            // method that should access main
-            defineValueProperty(Cstr, memberName, function (this: Node, ...args: any[]) {
-              return callMethod(this, [memberName], args);
-            });
           }
         }
       }
@@ -108,7 +82,7 @@ export const initWebWorker = (nodeCstrs: NodeConstructor[]) => {
   definePrototypePropertyDescriptor(self.HTMLAnchorElement, HTMLAnchorDescriptorMap);
   definePrototypePropertyDescriptor(self.HTMLCanvasElement, HTMLCanvasDescriptorMap);
 
-  cachedTreeProps(self.Node, nodeTreePropNames);
+  cachedTreeProps(Node, nodeTreePropNames);
   cachedTreeProps(self.Element, elementTreePropNames);
   cachedTreeProps(self.DocumentFragment, elementTreePropNames);
 

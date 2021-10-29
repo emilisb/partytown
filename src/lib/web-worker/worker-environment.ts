@@ -4,7 +4,7 @@ import { callMethod, createGlobalConstructorProxy, getter, proxy, setter } from 
 import { createImageConstructor } from './worker-image';
 import { createNavigator } from './worker-navigator';
 import { debug, logWorker, normalizedWinId } from '../utils';
-import { createInstance, elementConstructors, getOrCreateInstance } from './worker-constructors';
+import { createInstance, nodeConstructors, getOrCreateInstance } from './worker-constructors';
 import {
   environments,
   InstanceIdKey,
@@ -163,8 +163,8 @@ export const createEnvironment = ({
       // create the same HTMLElement constructors that were found on main's window
       // and add each constructor to the windown environment
       // window.HTMLParagraphElement = class extends HTMLElement {...}
-      Object.keys(elementConstructors).map(
-        (tagName) => (win[elementConstructors[tagName].name] = elementConstructors[tagName])
+      Object.keys(nodeConstructors).map(
+        (tagName) => (win[nodeConstructors[tagName].name] = nodeConstructors[tagName])
       );
 
       // create interface properties found on window
