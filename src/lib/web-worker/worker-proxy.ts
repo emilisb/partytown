@@ -50,7 +50,7 @@ const queue = (
     return sync();
   }
 
-  setTimeout(sync, 50);
+  setTimeout(sync, 40);
 };
 
 export const sync = () => {
@@ -92,13 +92,8 @@ export const sync = () => {
 
 export const getter = (instance: WorkerProxy, applyPath: ApplyPath, groupedGetters?: string[]) => {
   const rtnValue = queue(instance, applyPath, false, undefined, groupedGetters);
-  if (debug) {
-    if (groupedGetters) {
-      logWorkerGetter(instance, applyPath, rtnValue, false, true);
-    } else {
-      logWorkerGetter(instance, applyPath, rtnValue);
-    }
-  }
+
+  logWorkerGetter(instance, applyPath, rtnValue, false, !!groupedGetters);
 
   return rtnValue;
 };

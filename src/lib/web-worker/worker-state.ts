@@ -1,6 +1,7 @@
-import { callMethod, getter, setter } from './worker-proxy';
+import { callMethod, getter } from './worker-proxy';
 import {
   cachedDimensions,
+  cachedTree,
   InstanceIdKey,
   webWorkerRefIdsByRef,
   webWorkerRefsByRefId,
@@ -81,6 +82,11 @@ export const cachedReadonlyProps = (Cstr: any, props: string) =>
 export const constantProps = (Cstr: any, props: { [propName: string]: any }) =>
   Object.keys(props).map((propName) => (Cstr.prototype[propName] = props[propName]));
 
+const dimensionPropNames =
+  'innerHeight,innerWidth,outerHeight,outerWidth,clientHeight,clientWidth,clientTop,clientLeft,scrollHeight,scrollWidth,scrollTop,scrollLeft,offsetHeight,offsetWidth,offsetTop,offsetLeft'.split(
+    ','
+  );
+
 /**
  * Known dimension properties to add to the Constructor's prototype
  * that when called they'll check the dimension cache, and if it's
@@ -108,12 +114,10 @@ export const cachedDimensionProps = (Cstr: any) =>
 
         return groupedDimensions[propName];
       },
-      set(val) {
-        cachedDimensions.set(getDimensionCacheKey(this, propName), val);
-        setter(this, [propName], val);
-      },
     });
   });
+
+const dimensionMethodNames = 'getClientRects,getBoundingClientRect'.split(',');
 
 export const cachedDimensionMethods = (Cstr: any) =>
   dimensionMethodNames.map((methodName) => {
@@ -127,13 +131,6 @@ export const cachedDimensionMethods = (Cstr: any) =>
       return dimensions;
     };
   });
-
-const dimensionPropNames =
-  'innerHeight,innerWidth,outerHeight,outerWidth,clientHeight,clientWidth,clientTop,clientLeft,scrollHeight,scrollWidth,scrollTop,scrollLeft,offsetHeight,offsetWidth,offsetTop,offsetLeft'.split(
-    ','
-  );
-
-const dimensionMethodNames = 'getClientRects,getBoundingClientRect'.split(',');
 
 const getDimensionCacheKey = (instance: WorkerProxy, memberName: string) =>
   instance[WinIdKey] + '.' + instance[InstanceIdKey] + '.' + memberName;

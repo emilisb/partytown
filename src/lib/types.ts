@@ -1,5 +1,5 @@
-import type { HTMLDocument } from './web-worker/worker-document';
-import type { HTMLElement } from './web-worker/worker-element';
+// import type { HTMLDocument } from './web-worker/worker-document';
+// import type { HTMLElement } from './web-worker/worker-element';
 import type { Location } from './web-worker/worker-location';
 
 export type CreateWorker = (workerName: string) => Worker;
@@ -20,12 +20,14 @@ export type WinId = number;
 
 export type MessageFromWorkerToSandbox =
   | [WorkerMessageType.MainDataRequestFromWorker]
+  | [WorkerMessageType.NodeConstructorsRequestFromWorker]
   | [WorkerMessageType.InitializedWebWorker]
   | [WorkerMessageType.InitializedEnvironmentScript, WinId, number, string]
   | [WorkerMessageType.InitializeNextScript, WinId];
 
 export type MessageFromSandboxToWorker =
   | [WorkerMessageType.MainDataResponseToWorker, InitWebWorkerData]
+  | [WorkerMessageType.NodeConstructorsResponseToWorker, NodeConstructor[]]
   | [WorkerMessageType.InitializeEnvironment, InitializeEnvironmentData]
   | [WorkerMessageType.InitializedEnvironment, WinId]
   | [WorkerMessageType.InitializeNextScript, InitializeScriptData]
@@ -35,6 +37,8 @@ export type MessageFromSandboxToWorker =
 export const enum WorkerMessageType {
   MainDataRequestFromWorker,
   MainDataResponseToWorker,
+  NodeConstructorsRequestFromWorker,
+  NodeConstructorsResponseToWorker,
   InitializedWebWorker,
   InitializeEnvironment,
   InitializedEnvironment,
@@ -74,10 +78,27 @@ export interface PartytownWebWorker extends Worker {
 
 export interface InitWebWorkerData {
   $config$: PartytownConfig;
-  $htmlConstructors$: string[];
   $interfaces$: InterfaceInfo[];
   $libPath$: string;
 }
+
+/**
+ * [0] Constructor name
+ * [1] Prototype parent construtor name
+ * [2] Node Name
+ * [3] NodeConstructorPropType[]
+ */
+export type NodeConstructor = [string, string, string, NodeConstructorMember[]];
+
+/**
+ * [0] Member name
+ * [1] Constructor name or InterfaceType
+ * [2]? If there's a value it's a static prop
+ */
+export type NodeConstructorMember =
+  | [string, string]
+  | [string, InterfaceType]
+  | [string, InterfaceType.Property, string | number | boolean];
 
 export interface InitWebWorkerContext {
   $isInitialized$?: number;
@@ -86,6 +107,7 @@ export interface InitWebWorkerContext {
 
 export interface WebWorkerContext extends InitWebWorkerData, InitWebWorkerContext {
   $forwardedTriggers$: string[];
+  $htmlConstructors$: NodeConstructor[];
   $windowMembers$: MembersInterfaceTypeInfo;
   $windowMemberNames$: string[];
   lastLog?: string;
@@ -100,7 +122,7 @@ export interface InitializeEnvironmentData {
 
 export interface WebWorkerEnvironment extends Omit<InitializeEnvironmentData, '$url$'> {
   $window$: Window;
-  $document$: HTMLDocument;
+  $document$: Document;
   $documentElement$: HTMLElement;
   $head$: HTMLElement;
   $body$: HTMLElement;
@@ -132,6 +154,11 @@ export const enum InterfaceType {
   AttributeNode = 2,
   TextNode = 3,
   CDataSectionNode = 4,
+
+  // NodeType 5 and 6 not used in the standards
+  Function = 5,
+  Property = 6,
+
   ProcessingInstructionNode = 7,
   CommentNode = 8,
   Document = 9,
@@ -139,19 +166,17 @@ export const enum InterfaceType {
   DocumentFragmentNode = 11,
 
   // Global Constructors and window function implementations
-  Property = 12,
-  Function = 13,
-  CanvasRenderingContext2D = 14,
-  CSSStyleDeclaration = 15,
-  DOMStringMap = 16,
-  DOMTokenList = 17,
-  History = 18,
-  Location = 19,
-  MutationObserver = 20,
-  NamedNodeMap = 21,
-  ResizeObserver = 22,
-  Screen = 23,
-  Storage = 24,
+  CanvasRenderingContext2D = 12,
+  CSSStyleDeclaration = 13,
+  DOMStringMap = 14,
+  DOMTokenList = 15,
+  History = 16,
+  Location = 17,
+  MutationObserver = 18,
+  NamedNodeMap = 19,
+  ResizeObserver = 20,
+  Screen = 21,
+  Storage = 22,
 }
 
 export const enum PlatformInstanceId {
@@ -267,7 +292,6 @@ export interface SerializedObject {
 export interface SerializedInstance {
   $winId$: number;
   $instanceId$?: number;
-  $parentInstanceId$?: number;
   /**
    * Node Type for Element (1), Text (3) and Document (9)
    */

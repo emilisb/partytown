@@ -50,7 +50,6 @@ export const serializeForWorker = (
             $winId$,
             $interfaceType$: value.nodeType,
             $instanceId$: getAndSetInstanceId(value),
-            $parentInstanceId$: getAndSetInstanceId(value.parentNode),
             $nodeName$: value.nodeName,
           },
         ];

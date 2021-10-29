@@ -182,11 +182,10 @@ export const getOrCreateSerializedInstance = ({
   $interfaceType$,
   $instanceId$,
   $winId$,
-  $parentInstanceId$,
   $nodeName$,
 }: SerializedInstance): any =>
   getPlatformInstance($winId$, $instanceId$) ||
-  getOrCreateInstance($interfaceType$, $instanceId$!, $winId$, $nodeName$, $parentInstanceId$);
+  getOrCreateInstance($interfaceType$, $instanceId$!, $winId$, $nodeName$);
 
 export const getPlatformInstance = (winId: number, instanceId: number | undefined) => {
   const env = environments[winId];

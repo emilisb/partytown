@@ -9,23 +9,23 @@ export const readMainInterfaces = (win: MainWindow) => {
   const $url$ = win.location + '';
 
   const docImpl = doc.implementation.createHTMLDocument();
-  const inputElm = docImpl.createElement('input');
+  const elm = docImpl.createElement('i');
   const canvas = docImpl.createElement('canvas');
   const canvasRenderingContext2D = canvas.getContext('2d');
 
   const implementations: MainImplementation[] = [
     [InterfaceType.Window, win],
-    [InterfaceType.CSSStyleDeclaration, inputElm.style],
+    [InterfaceType.CSSStyleDeclaration, elm.style],
     [InterfaceType.Document, docImpl],
     [InterfaceType.DocumentFragmentNode, docImpl.createDocumentFragment()],
-    [InterfaceType.DOMStringMap, inputElm.dataset],
-    [InterfaceType.DOMTokenList, inputElm.classList],
-    [InterfaceType.Element, inputElm],
+    [InterfaceType.DOMStringMap, elm.dataset],
+    [InterfaceType.DOMTokenList, elm.classList],
+    [InterfaceType.Element, elm],
     [InterfaceType.CanvasRenderingContext2D, canvasRenderingContext2D],
     [InterfaceType.History, win.history],
     [InterfaceType.Location, win.location],
     [InterfaceType.MutationObserver, new MutationObserver(noop)],
-    [InterfaceType.NamedNodeMap, inputElm.attributes],
+    [InterfaceType.NamedNodeMap, elm.attributes],
     [InterfaceType.ResizeObserver, new ResizeObserver(noop)],
     [InterfaceType.Screen, win.screen],
     [InterfaceType.Storage, win.localStorage],
@@ -35,7 +35,6 @@ export const readMainInterfaces = (win: MainWindow) => {
   const initWebWorkerData: InitWebWorkerData = {
     $config$,
     $libPath$: new URL($libPath$, $url$) + '',
-    $htmlConstructors$: Object.getOwnPropertyNames(win).filter((c) => /^H.*t$/i.test(c)),
     $interfaces$: implementations.map(([interfaceType, impl, cstrName]) => {
       let memberName: string;
       let value: any;
@@ -66,9 +65,7 @@ export const readMainInterfaces = (win: MainWindow) => {
   };
 
   if (debug) {
-    logMain(
-      `Read main window, interfaces: ${initWebWorkerData.$interfaces$.length}, HTML Constructors: ${initWebWorkerData.$htmlConstructors$.length}`
-    );
+    logMain(`Read window interfaces: ${initWebWorkerData.$interfaces$.length}`);
   }
 
   return initWebWorkerData;

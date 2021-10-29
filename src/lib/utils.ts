@@ -287,7 +287,12 @@ export const getConstructorName = (obj: { constructor?: { name?: string } } | un
 const startsWith = (str: string, val: string) => str.startsWith(val);
 
 export const isValidMemberName = (memberName: string) => {
-  if (startsWith(memberName, 'webkit') || startsWith(memberName, 'toJSON')) {
+  if (
+    startsWith(memberName, 'webkit') ||
+    startsWith(memberName, 'toJSON') ||
+    startsWith(memberName, 'constructor') ||
+    startsWith(memberName, 'toString')
+  ) {
     return false;
   } else if (startsWith(memberName, 'on') && memberName.toLowerCase() === memberName) {
     return false;

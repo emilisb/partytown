@@ -1,10 +1,10 @@
 import { cachedDimensionProps, cachedReadonlyProps } from './worker-state';
 import { callMethod, createGlobalConstructorProxy, getter, proxy, setter } from './worker-proxy';
-import { constructPlatformDocumentNode, HTMLDocument } from './worker-document';
+// import { constructPlatformDocumentNode, HTMLDocument } from './worker-document';
 import { createImageConstructor } from './worker-image';
 import { createNavigator } from './worker-navigator';
 import { debug, logWorker, normalizedWinId } from '../utils';
-import { elementConstructors, getOrCreateInstance } from './worker-constructors';
+import { createInstance, elementConstructors, getOrCreateInstance } from './worker-constructors';
 import {
   environments,
   InstanceIdKey,
@@ -41,7 +41,7 @@ export const createEnvironment = ({
 
       constructor() {
         initWindowInstance(this);
-        return proxy(InterfaceType.Window, this, []);
+        // return proxy(InterfaceType.Window, this, []);
       }
 
       get document() {
@@ -101,35 +101,27 @@ export const createEnvironment = ({
       }
     }
 
-    const $document$ = new HTMLDocument(
-      InterfaceType.Document,
-      PlatformInstanceId.document,
-      $winId$,
-      NodeName.Document
-    );
+    const $document$ = createInstance(InterfaceType.Document, PlatformInstanceId.document, $winId$);
 
-    const $documentElement$ = constructPlatformDocumentNode(
-      $winId$,
+    const $documentElement$ = createInstance(
+      InterfaceType.Element,
       PlatformInstanceId.documentElement,
-      'Html',
-      $document$,
-      null
+      $winId$,
+      NodeName.DocumentElement
     );
 
-    const $head$ = constructPlatformDocumentNode(
-      $winId$,
+    const $head$ = createInstance(
+      InterfaceType.Element,
       PlatformInstanceId.head,
-      'Head',
-      $documentElement$,
-      $documentElement$
+      $winId$,
+      NodeName.Head
     );
 
-    const $body$ = constructPlatformDocumentNode(
-      $winId$,
+    const $body$ = createInstance(
+      InterfaceType.Element,
       PlatformInstanceId.body,
-      'Body',
-      $documentElement$,
-      $documentElement$
+      $winId$,
+      NodeName.Body
     );
 
     const $location$ = new Location($url$);
@@ -227,10 +219,10 @@ export const createEnvironment = ({
       $winId$,
       $parentWinId$,
       $window$,
-      $document$,
-      $documentElement$,
-      $head$,
-      $body$,
+      $document$: $document$ as any,
+      $documentElement$: $documentElement$ as any,
+      $head$: $head$ as any,
+      $body$: $body$ as any,
       $location$,
       $isTop$,
       $run$: (script: string) => {

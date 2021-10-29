@@ -3,7 +3,6 @@ import type { WorkerProxy } from './worker-proxy-constructor';
 
 export const WinIdKey = Symbol();
 export const InstanceIdKey = Symbol();
-export const ParentInstanceIdKey = Symbol();
 export const InterfaceTypeKey = Symbol();
 export const NodeNameKey = Symbol();
 
@@ -16,7 +15,5 @@ export const webWorkerCtx: WebWorkerContext = {} as any;
 
 export const environments: { [winId: number]: WebWorkerEnvironment } = {};
 
-/**
- * Key is "winId.instanceId.applyPath"
- */
 export const cachedDimensions = new Map<string, any>();
+export const cachedTree = new Map<string, any>();

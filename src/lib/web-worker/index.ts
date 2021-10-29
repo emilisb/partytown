@@ -1,13 +1,8 @@
 import { callWorkerRefHandler } from './worker-serialization';
 import { createEnvironment } from './worker-environment';
-import { debug, logWorker, nextTick, normalizedWinId } from '../utils';
+import { debug, logWorker, normalizedWinId } from '../utils';
 import { environments, webWorkerCtx } from './worker-constants';
-import {
-  ForwardMainTriggerData,
-  InitWebWorkerData,
-  MessageFromSandboxToWorker,
-  WorkerMessageType,
-} from '../types';
+import { ForwardMainTriggerData, MessageFromSandboxToWorker, WorkerMessageType } from '../types';
 import { initNextScriptsInWebWorker } from './worker-exec';
 import { initWebWorker } from './init-web-worker';
 import { workerForwardedTriggerHandle } from './worker-forwarded-trigger';
@@ -43,18 +38,28 @@ const receiveMessageFromSandboxToWorker = (ev: MessageEvent<MessageFromSandboxTo
       }
     }
   } else if (msgType === WorkerMessageType.MainDataResponseToWorker) {
+    // received initial main data
+    // merge it into the web worker context object
+    Object.assign(webWorkerCtx, msg[1]);
+    // we're not done yet, let's also request all the HTML constructor data too
+    // splitting out initialization into multiple postMessages so it's not a long running task
+    postMessage([WorkerMessageType.NodeConstructorsRequestFromWorker]);
+  } else if (msgType === WorkerMessageType.NodeConstructorsResponseToWorker) {
     // initialize the web worker with the received the main data
-    initWebWorker(msg[1] as InitWebWorkerData);
+    initWebWorker(msg[1]);
+    // send to the main thread that the web worker has been initialized
     webWorkerCtx.$postMessage$([WorkerMessageType.InitializedWebWorker]);
 
-    nextTick(() => {
-      if (debug && queuedEvents.length) {
-        logWorker(`Queued ready messages: ${queuedEvents.length}`);
-      }
-      queuedEvents.slice().forEach(receiveMessageFromSandboxToWorker);
-      queuedEvents.length = 0;
-    });
+    // replay any of the queued events we already have
+    // before the web worker was initialized
+    if (debug && queuedEvents.length) {
+      logWorker(`Queued ready messages: ${queuedEvents.length}`);
+    }
+    queuedEvents.slice().forEach(receiveMessageFromSandboxToWorker);
+    queuedEvents.length = 0;
   } else {
+    // the web worker hasn't finished initializing yet, let's store
+    // this event so it can be re-ran after initialization
     queuedEvents.push(ev);
   }
 };

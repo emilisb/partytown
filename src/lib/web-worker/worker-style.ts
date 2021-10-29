@@ -1,14 +1,16 @@
 import { callMethod, getter } from './worker-proxy';
 import { constantProps, getInstanceStateValue, setInstanceStateValue } from './worker-state';
-import { HTMLElement } from './worker-element';
+// import { HTMLElement } from './worker-element';
 import { StateProp } from '../types';
 import type { WorkerProxy } from './worker-proxy-constructor';
 
-export class HTMLStyleElement extends HTMLElement {
-  get sheet() {
-    return new CSSStyleSheet(this);
-  }
-}
+export const HTMLStyleElement: PropertyDescriptorMap & ThisType<WorkerProxy> = {
+  sheet: {
+    get() {
+      return new CSSStyleSheet(this);
+    },
+  },
+};
 
 class CSSStyleSheet {
   ownerNode: WorkerProxy;

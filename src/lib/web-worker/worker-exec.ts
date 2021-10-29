@@ -10,7 +10,7 @@ import { environments, InstanceIdKey, webWorkerCtx, WinIdKey } from './worker-co
 import { getEnv } from './worker-environment';
 import { getInstanceStateValue, getStateValue, setStateValue } from './worker-state';
 import type { Location } from './worker-location';
-import type { Node } from './worker-node';
+// import type { Node } from './worker-node';
 import type { WorkerProxy } from './worker-proxy-constructor';
 
 export const initNextScriptsInWebWorker = async (initScript: InitializeScriptData) => {
@@ -119,7 +119,7 @@ const runStateLoadHandlers = (instanceId: number, type: StateProp, handlers?: Ev
   }
 };
 
-export const insertIframe = (iframe: Node) => {
+export const insertIframe = (iframe: WorkerProxy) => {
   // an iframe element's instanceId is also
   // the winId of it's contentWindow
   let i = 0;
