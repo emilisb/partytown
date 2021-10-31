@@ -56,7 +56,6 @@ export class Node extends WorkerProxy {
   }
 
   get nodeName() {
-    debugger;
     return this[NodeNameKey];
   }
 
@@ -76,5 +75,11 @@ export class Attr {
   constructor(serializedAttr: SerializedAttr) {
     this.name = serializedAttr[0];
     this.value = serializedAttr[1];
+  }
+  get nodeName() {
+    return this.name;
+  }
+  get nodeType() {
+    return 2;
   }
 }

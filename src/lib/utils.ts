@@ -1,5 +1,11 @@
 import { ApplyPath, InterfaceType, NodeName, PlatformInstanceId } from './types';
-import { InstanceIdKey, NodeNameKey, webWorkerCtx, WinIdKey } from './web-worker/worker-constants';
+import {
+  ApplyPathKey,
+  InstanceIdKey,
+  NodeNameKey,
+  webWorkerCtx,
+  WinIdKey,
+} from './web-worker/worker-constants';
 
 export const debug = (globalThis as any).partytownDebug;
 
@@ -132,9 +138,8 @@ const logTargetProp = (target: any, accessType: 'Get' | 'Set' | 'Call', applyPat
   if (target) {
     const instanceId = target[InstanceIdKey];
     const cstrName = getConstructorName(target);
-    if (instanceId === PlatformInstanceId.window) {
-      n = '';
-    } else if (instanceId === PlatformInstanceId.document) {
+
+    if (instanceId === PlatformInstanceId.document) {
       n = 'document.';
     } else if (instanceId === PlatformInstanceId.documentElement) {
       n = 'document.documentElement.';
@@ -143,31 +148,39 @@ const logTargetProp = (target: any, accessType: 'Get' | 'Set' | 'Call', applyPat
     } else if (instanceId === PlatformInstanceId.body) {
       n = 'document.body.';
     } else if (target.nodeType === InterfaceType.Element) {
-      n = target.nodeName.toLowerCase() + '.';
+      n = target.nodeName.toLowerCase() + 'Element.';
+    } else if (target.nodeType === InterfaceType.TextNode) {
+      n = 'textNode.';
     } else if (target.nodeType === InterfaceType.CommentNode) {
-      n = 'comment.';
-    } else if (target.nodeType === InterfaceType.AttributeNode) {
-      n = 'attributes.';
+      n = 'commentNode.';
     } else if (target.nodeType === InterfaceType.DocumentFragmentNode) {
       n = 'fragment.';
     } else if (target.nodeType === InterfaceType.DocumentTypeNode) {
       n = 'documentTypeNode.';
+    } else if (target.nodeType === InterfaceType.AttributeNode) {
+      n = 'attributes.';
     } else if (target.nodeType <= InterfaceType.DocumentFragmentNode) {
       n = 'node.';
-    } else if (cstrName === 'CSSStyleDeclaration') {
-      n = 'style.';
-    } else if (cstrName === 'MutationObserver') {
-      n = 'mutationObserver.';
-    } else if (cstrName === 'ResizeObserver') {
-      n = 'resizeObserver.';
     } else if (cstrName === 'CanvasRenderingContext2D') {
       n = 'context2D.';
+    } else if (cstrName === 'CSSStyleDeclaration') {
+      n = 'value.';
+    } else if (cstrName === 'MutationObserver') {
+      n = 'mutationObserver.';
+    } else if (cstrName === 'NamedNodeMap') {
+      n = 'namedNodeMap.';
+    } else if (cstrName === 'ResizeObserver') {
+      n = 'resizeObserver.';
     } else {
       n = '¯\\_(ツ)_/¯ TARGET.';
       console.warn('¯\\_(ツ)_/¯ TARGET', target);
     }
+
+    if (target[ApplyPathKey] && target[ApplyPathKey].length) {
+      n += [...target[ApplyPathKey]].join('.') + '.';
+    }
   }
-  if ('Get' === accessType && applyPath.length > 1) {
+  if (applyPath.length > 1) {
     const first = applyPath.slice(0, applyPath.length - 1);
     const last = applyPath[applyPath.length - 1];
     if (!isNaN(last as any)) {

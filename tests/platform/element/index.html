@@ -54,7 +54,7 @@
   <body mph="88">
     <h1>Element</h1>
     <ul>
-      <!-- <li>
+      <li>
         <strong>element, nodeName/Type</strong>
         <code id="testElementNameType"></code>
         <script type="text/partytown">
@@ -260,11 +260,10 @@
         <script type="text/partytown">
           (function () {
             const elm = document.getElementById('testAttrsNodeType');
-
             elm.textContent = elm.attributes.id.nodeType + ' ' + elm.attributes.id.nodeName;
           })();
         </script>
-      </li> -->
+      </li>
 
       <li>
         <strong>attributes.style.value</strong>
@@ -272,18 +271,16 @@
         <script type="text/partytown">
           (function () {
             const elm = document.getElementById('testAttrsStyleValue');
-
             const attributes = elm.attributes;
-
             const style = attributes.style;
+            const name = style.name;
             const value = style.value;
-
-            elm.textContent = value;
+            elm.textContent = name + ' ' + value;
           })();
         </script>
       </li>
 
-      <!-- <li>
+      <li>
         <strong>paragraph constructor.name</strong>
         <div><p style="margin: 0; padding: 0" id="testParagraphConstructor"></p></div>
         <script type="text/partytown">
@@ -389,7 +386,7 @@
         (function () {
           document.body.classList.add('completed');
         })();
-      </script> -->
+      </script>
     </ul>
 
     <hr />

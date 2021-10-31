@@ -29,7 +29,7 @@ export const defineWorkerInterface = (interfaceInfo: InterfaceInfo) => {
     : (self as any)[superCstrName];
 
   const Cstr = ((self as any)[cstrName] = defineConstructorName(
-    class extends SuperCstr {},
+    cstrName === 'Node' ? Node : class extends SuperCstr {},
     cstrName
   ));
 
@@ -38,7 +38,7 @@ export const defineWorkerInterface = (interfaceInfo: InterfaceInfo) => {
   }
 
   members.map(([memberName, memberType, staticValue]) => {
-    if (!(memberName in Cstr.prototype)) {
+    if (!(memberName in Cstr.prototype) && !(memberName in Node.prototype)) {
       // member not already in the constructor's prototype
       if (typeof memberType === 'string') {
         defineProxyProperty(Cstr, memberName, memberType);
@@ -72,7 +72,7 @@ export const defineWorkerInterface = (interfaceInfo: InterfaceInfo) => {
   });
 };
 
-const TrapConstructors: { [cstrName: string]: 1 } = { CSSStyleDeclaration: 1 };
+const TrapConstructors: { [cstrName: string]: 1 } = { CSSStyleDeclaration: 1, NamedNodeMap: 1 };
 
 export const patchPrototypes = () => {
   definePrototypePropertyDescriptor(self.Element, ElementDescriptorMap);
