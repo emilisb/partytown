@@ -1,7 +1,6 @@
 import { callMethod, getter } from './worker-proxy';
 import {
   cachedDimensions,
-  cachedTree,
   InstanceIdKey,
   webWorkerRefIdsByRef,
   webWorkerRefsByRefId,

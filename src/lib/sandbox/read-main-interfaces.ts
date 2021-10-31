@@ -41,24 +41,24 @@ export const readMainInterfaces = (win: MainWindow) => {
       let type: string;
       let objCstrName: string;
       let objImpl: MainImplementation | undefined;
-      let interfaceInfo: InterfaceInfo = [interfaceType, cstrName, {}];
+      let interfaceInfo: any = [interfaceType, cstrName, {}];
 
-      for (memberName in impl) {
-        if (isValidMemberName(memberName)) {
-          value = impl[memberName];
-          type = typeof value;
-          if (type === 'function') {
-            interfaceInfo[2][memberName] = InterfaceType.Function;
-          } else if (type === 'object') {
-            objCstrName = getConstructorName(value);
-            objImpl = implementations.find((i) => i[2] === objCstrName);
-            if (objImpl) {
-              // this object's constructor is one of the interfaces we care about
-              interfaceInfo[2][memberName] = objImpl[0];
-            }
-          }
-        }
-      }
+      // for (memberName in impl) {
+      //   if (isValidMemberName(memberName)) {
+      //     value = impl[memberName];
+      //     type = typeof value;
+      //     if (type === 'function') {
+      //       interfaceInfo[2][memberName] = InterfaceType.Function;
+      //     } else if (type === 'object') {
+      //       objCstrName = getConstructorName(value);
+      //       objImpl = implementations.find((i) => i[2] === objCstrName);
+      //       if (objImpl) {
+      //         // this object's constructor is one of the interfaces we care about
+      //         interfaceInfo[2][memberName] = objImpl[0];
+      //       }
+      //     }
+      //   }
+      // }
 
       return interfaceInfo;
     }),

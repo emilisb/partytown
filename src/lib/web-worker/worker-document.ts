@@ -1,14 +1,11 @@
 import { callMethod, setter } from './worker-proxy';
-import { cachedReadonlyProps, constantProps } from './worker-state';
 import { createEnvironment, getEnv, getEnvWindow } from './worker-environment';
-import { debug, defineConstructorName, randomId, SCRIPT_TYPE } from '../utils';
-import { getOrCreateInstance } from './worker-constructors';
+import { getOrCreateNodeInstance } from './worker-constructors';
 import { getPartytownScript } from './worker-exec';
-// import { HTMLElement } from './worker-element';
-import { InterfaceType, NodeName } from '../types';
-import { WinIdKey } from './worker-constants';
-// import type { WorkerProxy } from './worker-proxy-constructor';
+import { NodeName } from '../types';
 import type { Node } from './worker-node';
+import { randomId, SCRIPT_TYPE } from '../utils';
+import { WinIdKey } from './worker-constants';
 
 export const DocumentDescriptorMap: PropertyDescriptorMap & ThisType<Node> = {
   body: {
@@ -23,7 +20,7 @@ export const DocumentDescriptorMap: PropertyDescriptorMap & ThisType<Node> = {
 
       const winId = this[WinIdKey];
       const instanceId = randomId();
-      const elm = getOrCreateInstance(InterfaceType.Element, instanceId, winId, tagName);
+      const elm = getOrCreateNodeInstance(winId, instanceId, tagName);
 
       callMethod(this, ['createElement'], [tagName], instanceId);
 
@@ -46,7 +43,7 @@ export const DocumentDescriptorMap: PropertyDescriptorMap & ThisType<Node> = {
       tagName = tagName.toUpperCase();
       const winId = this[WinIdKey];
       const instanceId = randomId();
-      const elm = getOrCreateInstance(InterfaceType.Element, instanceId, winId, tagName);
+      const elm = getOrCreateNodeInstance(instanceId, winId, tagName);
 
       callMethod(this, ['createElementNS'], [ns, tagName], instanceId);
 
@@ -59,7 +56,7 @@ export const DocumentDescriptorMap: PropertyDescriptorMap & ThisType<Node> = {
       const winId = this[WinIdKey];
       const instanceId = randomId();
 
-      const node = getOrCreateInstance(InterfaceType.TextNode, instanceId, winId);
+      const node = getOrCreateNodeInstance(winId, instanceId, NodeName.Text);
 
       callMethod(this, ['createTextNode'], [text], instanceId);
 
@@ -73,14 +70,10 @@ export const DocumentDescriptorMap: PropertyDescriptorMap & ThisType<Node> = {
 
   currentScript: {
     get() {
+      const winId = this[WinIdKey];
       const currentScriptId = getEnv(this).$currentScriptId$!;
       if (currentScriptId > 0) {
-        return getOrCreateInstance(
-          InterfaceType.Element,
-          currentScriptId,
-          this[WinIdKey],
-          NodeName.Script
-        );
+        return getOrCreateNodeInstance(winId, currentScriptId, NodeName.Script);
       }
       return null;
     },
@@ -97,12 +90,6 @@ export const DocumentDescriptorMap: PropertyDescriptorMap & ThisType<Node> = {
       return getEnv(this).$documentElement$;
     },
   },
-
-  // doctype: {
-  //   get() {
-  //     return getEnv(this).$documentElement$;
-  //   },
-  // },
 
   getElementsByTagName: {
     value: function (tagName: string) {
@@ -124,9 +111,9 @@ export const DocumentDescriptorMap: PropertyDescriptorMap & ThisType<Node> = {
   },
 
   implementation: {
-    get: () => ({
+    value: {
       hasFeature: () => true,
-    }),
+    },
   },
 
   location: {
@@ -136,5 +123,13 @@ export const DocumentDescriptorMap: PropertyDescriptorMap & ThisType<Node> = {
     set(url) {
       getEnv(this).$location$.href = url + '';
     },
+  },
+
+  nodeType: {
+    value: 9,
+  },
+
+  readyState: {
+    value: 'complete',
   },
 };

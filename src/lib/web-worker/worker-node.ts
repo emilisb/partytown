@@ -1,101 +1,18 @@
-import { callMethod, getter, setter, sync } from './worker-proxy';
+import { callMethod, setter, sync } from './worker-proxy';
 import { getEnv } from './worker-environment';
 import { getInstanceStateValue } from './worker-state';
 import { insertIframe, runScriptContent } from './worker-exec';
-import {
-  InstanceIdKey,
-  InterfaceTypeKey,
-  NodeNameKey,
-  webWorkerCtx,
-  WinIdKey,
-} from './worker-constants';
-import { InterfaceType, NodeName, StateProp, WorkerMessageType } from '../types';
-// import type { HTMLDocument } from './worker-document';
+import { InstanceIdKey, NodeNameKey, webWorkerCtx, WinIdKey } from './worker-constants';
+import { NodeName, SerializedAttr, StateProp, WorkerMessageType } from '../types';
 import { SCRIPT_TYPE, SCRIPT_TYPE_EXEC } from '../utils';
-import type { WorkerProxy } from './worker-proxy-constructor';
+import { WorkerProxy } from './worker-proxy-constructor';
 
-// export const NodeProperties: PropertyDescriptorMap & ThisType<WorkerProxy> = {
-//   href: {
-//     get() {
-//       // many sccripts just look for "href" on a node
-//       // putting this here to prevent unnecessary main reads
-//     },
-//   },
-//   nodeName: {
-//     get() {
-//       return this[NodeNameKey];
-//     },
-//   },
-//   nodeType: {
-//     get() {
-//       return this[InterfaceTypeKey];
-//     },
-//   },
-//   ownerDocument: {
-//     get() {
-//       return getEnv(this).$document$;
-//     },
-//   },
-// };
+export class Node extends WorkerProxy {
+  [NodeNameKey]: string;
 
-// export const NodeMethods: ThisType<WorkerProxy> = {
-//   appendChild(newNode: WorkerProxy) {
-//     return insertBefore(this, newNode, null);
-//   },
-//   insertBefore(newNode: WorkerProxy, refNode: WorkerProxy | null) {
-//     return insertBefore(this, newNode, refNode);
-//   },
-// };
-
-// const insertBefore = (instance: WorkerProxy, newNode: WorkerProxy, refNode: WorkerProxy | null) => {
-//   // ensure the node being added to the window's document
-//   // is given the same winId as the window it's being added to
-//   const winId = (newNode[WinIdKey] = instance[WinIdKey]);
-//   const instanceId = newNode[InstanceIdKey];
-//   const nodeName = newNode[NodeNameKey];
-//   const isScript = nodeName === NodeName.Script;
-//   const isIFrame = nodeName === NodeName.IFrame;
-
-//   if (isScript) {
-//     const scriptContent = getInstanceStateValue<string>(newNode, StateProp.innerHTML);
-
-//     if (scriptContent) {
-//       const errorMsg = runScriptContent(getEnv(newNode), instanceId, scriptContent, winId);
-//       const datasetType = errorMsg ? 'pterror' : 'ptid';
-//       const datasetValue = errorMsg || instanceId;
-
-//       setter(newNode, ['type'], SCRIPT_TYPE + SCRIPT_TYPE_EXEC);
-//       setter(newNode, ['dataset', datasetType], datasetValue);
-//       setter(newNode, ['innerHTML'], scriptContent);
-//     }
-//   }
-
-//   callMethod(instance, ['insertBefore'], [newNode, refNode]);
-
-//   if (isIFrame) {
-//     insertIframe(newNode);
-//   }
-//   if (isScript) {
-//     sync();
-//     webWorkerCtx.$postMessage$([WorkerMessageType.InitializeNextScript, winId]);
-//   }
-
-//   return newNode;
-// };
-
-export class Node {
-  [WinIdKey]: number;
-  [InstanceIdKey]: number;
-  [InterfaceTypeKey]: InterfaceType;
-  [NodeNameKey]: string | undefined;
-
-  constructor(interfaceType: InterfaceType, instanceId: number, winId?: number, nodeName?: string) {
-    this[InterfaceTypeKey] = interfaceType;
-    this[WinIdKey] = winId!;
-    this[InstanceIdKey] = instanceId!;
+  constructor(winId: number, instanceId: number, nodeName: string) {
+    super(winId, instanceId);
     this[NodeNameKey] = nodeName;
-
-    // return proxy((this[InterfaceTypeKey] = interfaceType), this, []);
   }
 
   appendChild(node: Node) {
@@ -150,10 +67,20 @@ export class Node {
   }
 
   get nodeType() {
-    return this[InterfaceTypeKey];
+    return 3;
   }
 
-  get ownerDocument(): HTMLDocument {
+  get ownerDocument(): Document {
     return getEnv(this).$document$;
+  }
+}
+
+export class Attr {
+  name: string;
+  value: string;
+
+  constructor(serializedAttr: SerializedAttr) {
+    this.name = serializedAttr[0];
+    this.value = serializedAttr[1];
   }
 }

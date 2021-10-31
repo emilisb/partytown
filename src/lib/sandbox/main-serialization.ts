@@ -43,19 +43,8 @@ export const serializeForWorker = (
     }
 
     if (type === 'object') {
-      if (value.nodeType) {
-        return [
-          SerializedType.Instance,
-          {
-            $winId$,
-            $interfaceType$: value.nodeType,
-            $instanceId$: getAndSetInstanceId(value),
-            $nodeName$: value.nodeName,
-          },
-        ];
-      }
-
       cstrName = getConstructorName(value);
+
       if (cstrName === 'Window') {
         return [
           SerializedType.Instance,
@@ -88,6 +77,22 @@ export const serializeForWorker = (
 
       if (cstrName === 'CSSStyleDeclaration') {
         return [SerializedType.Object, serializeObjectForWorker($winId$, value, added)];
+      }
+
+      if (cstrName === 'Attr') {
+        return [SerializedType.Attr, [(value as Attr).name, (value as Attr).value]];
+      }
+
+      if (value.nodeType) {
+        return [
+          SerializedType.Instance,
+          {
+            $winId$,
+            $interfaceType$: value.nodeType,
+            $instanceId$: getAndSetInstanceId(value),
+            $nodeName$: value.nodeName,
+          },
+        ];
       }
 
       return [SerializedType.Object, serializeObjectForWorker($winId$, value, added, true, true)];

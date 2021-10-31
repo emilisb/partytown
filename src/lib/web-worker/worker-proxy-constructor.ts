@@ -1,19 +1,15 @@
-import type { InterfaceType } from '../types';
-import { InstanceIdKey, InterfaceTypeKey, NodeNameKey, WinIdKey } from './worker-constants';
-import { proxy } from './worker-proxy';
+import type { ApplyPath } from '../types';
+import { ApplyPathKey, InstanceIdKey, NodeNameKey, WinIdKey } from './worker-constants';
 
 export class WorkerProxy {
   [WinIdKey]: number;
   [InstanceIdKey]: number;
-  [InterfaceTypeKey]: InterfaceType;
   [NodeNameKey]: string | undefined;
+  [ApplyPathKey]: string[];
 
-  constructor(interfaceType: InterfaceType, instanceId: number, winId?: number, nodeName?: string) {
-    this[InterfaceTypeKey] = interfaceType;
+  constructor(winId?: number, instanceId?: number, applyPath?: ApplyPath) {
     this[WinIdKey] = winId!;
     this[InstanceIdKey] = instanceId!;
-    this[NodeNameKey] = nodeName;
-
-    // return proxy((this[InterfaceTypeKey] = interfaceType), this, []);
+    this[ApplyPathKey] = applyPath || [];
   }
 }

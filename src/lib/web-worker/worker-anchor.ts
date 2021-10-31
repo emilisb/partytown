@@ -1,11 +1,10 @@
 import { getUrl } from './worker-exec';
-// import { HTMLElement } from './worker-element';
 import { setInstanceStateValue } from './worker-state';
 import { setter } from './worker-proxy';
 import { StateProp } from '../types';
-import type { WorkerProxy } from './worker-proxy-constructor';
+import type { Node } from './worker-node';
 
-export const HTMLAnchorDescriptorMap: PropertyDescriptorMap & ThisType<WorkerProxy> = {
+export const HTMLAnchorDescriptorMap: PropertyDescriptorMap & ThisType<Node> = {
   hash: {
     get() {
       return getUrl(this).hash;

@@ -1,4 +1,4 @@
-import { debug, logWorker, nextTick, SCRIPT_TYPE, SCRIPT_TYPE_EXEC } from '../utils';
+import { debug, logWorker, nextTick, SCRIPT_TYPE } from '../utils';
 import {
   EventHandler,
   InitializeScriptData,
@@ -6,11 +6,10 @@ import {
   StateProp,
   WorkerMessageType,
 } from '../types';
-import { environments, InstanceIdKey, webWorkerCtx, WinIdKey } from './worker-constants';
+import { environments, InstanceIdKey, webWorkerCtx } from './worker-constants';
 import { getEnv } from './worker-environment';
 import { getInstanceStateValue, getStateValue, setStateValue } from './worker-state';
 import type { Location } from './worker-location';
-// import type { Node } from './worker-node';
 import type { WorkerProxy } from './worker-proxy-constructor';
 
 export const initNextScriptsInWebWorker = async (initScript: InitializeScriptData) => {

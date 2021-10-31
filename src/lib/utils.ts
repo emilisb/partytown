@@ -241,6 +241,9 @@ const logValue = (applyPath: ApplyPath, v: any): string => {
         .join(', ')}]`;
     }
     if ('value' in v) {
+      if (typeof v.value === 'string') {
+        return `"${v.value}"`;
+      }
       return objToString(v.value);
     }
     return objToString(v);

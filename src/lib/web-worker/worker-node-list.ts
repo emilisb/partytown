@@ -1,16 +1,16 @@
 import { len } from '../utils';
-import type { WorkerProxy } from './worker-proxy-constructor';
+import type { Node } from './worker-node';
 
 export class NodeList {
-  private _: WorkerProxy[];
+  private _: Node[];
 
-  constructor(nodes: WorkerProxy[]) {
+  constructor(nodes: Node[]) {
     (this._ = nodes).map((node, index) => ((this as any)[index] = node));
   }
   entries() {
     return this._.entries();
   }
-  forEach(cb: (value: WorkerProxy, index: number) => void, thisArg?: any) {
+  forEach(cb: (value: Node, index: number) => void, thisArg?: any) {
     this._.map(cb, thisArg);
   }
   item(index: number) {

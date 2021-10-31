@@ -1,4 +1,4 @@
-import { InterfaceType, NodeConstructor, NodeConstructorMember } from '../types';
+import { InterfaceType, InterfaceInfo, InterfaceMember } from '../types';
 import { debug, getConstructorName, isValidMemberName, logMain } from '../utils';
 
 export const readNodeConstructors = (win: any) => {
@@ -6,11 +6,11 @@ export const readNodeConstructors = (win: any) => {
   const htmlCstrNames = Object.getOwnPropertyNames(win).filter((c) => /^HTML.+Element$/.test(c));
 
   const cstrNames =
-    `Node,CharacterData,Text,Comment,DocumentFragment,Element,HTMLElement,SVGElement,Document,HTMLDocument,DocumentType,HTMLMediaElement`
+    `Node,CharacterData,Text,Comment,DocumentFragment,Element,HTMLElement,SVGElement,Document,HTMLDocument,DocumentType,NamedNodeMap,DOMStringMap,DOMTokenList,HTMLMediaElement`
       .split(',')
       .concat(htmlCstrNames);
 
-  const cstrs: NodeConstructor[] = [];
+  const interfaces: InterfaceInfo[] = [];
   const readCstrs = new Set<string>();
 
   const doc: Document = win.document;
@@ -26,32 +26,36 @@ export const readNodeConstructors = (win: any) => {
 
       const implementation = getDomImplementation(docImpl, index, htmlTagName);
 
-      const members: NodeConstructorMember[] = [];
+      const members: InterfaceMember[] = [];
 
       if (index === 0) {
         // get all members on Node
         for (const memberName in implementation) {
-          readMember(members, implementation, memberName);
+          readImplentationMember(members, implementation, memberName);
         }
       } else {
         // only get this constructor's prototype members
         Object.keys(Object.getOwnPropertyDescriptors(CstrPrototype)).map((memberName) =>
-          readMember(members, implementation, memberName)
+          readImplentationMember(members, implementation, memberName)
         );
       }
 
-      cstrs.push([cstrName, superCstrName, (implementation as Node).nodeName, members]);
+      interfaces.push([cstrName, superCstrName, members, (implementation as Node).nodeName]);
     }
   });
 
   if (debug) {
-    logMain(`Read Node Constructors: ${cstrs.length}`);
+    logMain(`Read main interfaces: ${interfaces.length}`);
   }
 
-  return cstrs;
+  return interfaces;
 };
 
-const readMember = (members: NodeConstructorMember[], implementation: any, memberName: string) => {
+const readImplentationMember = (
+  members: InterfaceMember[],
+  implementation: any,
+  memberName: string
+) => {
   if (isValidMemberName(memberName)) {
     const value = implementation[memberName];
     const memberType = typeof value;
@@ -82,7 +86,7 @@ const getDomImplementation = (
   tagName: string | undefined
 ): any => {
   if (cstrIndex < 3) {
-    // Node / Text
+    // Node / CharacterData / Text
     return docImpl.createTextNode('');
   } else if (cstrIndex === 3) {
     // Comment
@@ -102,6 +106,15 @@ const getDomImplementation = (
   } else if (cstrIndex === 10) {
     // DocumentType
     return docImpl.doctype;
+  } else if (cstrIndex === 11) {
+    // NamedNodeMap
+    return docImpl.head.attributes;
+  } else if (cstrIndex === 12) {
+    // DOMStringMap
+    return docImpl.head.dataset;
+  } else if (cstrIndex === 13) {
+    // DOMTokenList
+    return docImpl.head.classList;
   } else {
     // create an element from the tag name
     return docImpl.createElement(tagName!);

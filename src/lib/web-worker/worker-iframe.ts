@@ -1,13 +1,12 @@
 import { environments, InstanceIdKey } from './worker-constants';
 import { getEnv } from './worker-environment';
 import { getInstanceStateValue, setInstanceStateValue } from './worker-state';
-// import { HTMLSrcElement } from './worker-element';
+import type { Node } from './worker-node';
 import { resolveUrl, updateIframeContent } from './worker-exec';
 import { setter } from './worker-proxy';
 import { StateProp } from '../types';
-import type { WorkerProxy } from './worker-proxy-constructor';
 
-export const HTMLIFrameElementProperties: PropertyDescriptorMap & ThisType<WorkerProxy> = {
+export const HTMLIFrameElementProperties: PropertyDescriptorMap & ThisType<Node> = {
   contentDocument: {
     get() {
       return (this as any).contentWindow.document;

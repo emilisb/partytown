@@ -1,13 +1,12 @@
-// import { HTMLElement } from './worker-element';
-import { InterfaceType } from '../types';
-import { proxy } from './worker-proxy';
-import type { WorkerProxy } from './worker-proxy-constructor';
+import { InstanceIdKey, WinIdKey } from './worker-constants';
+import type { Node } from './worker-node';
 import { serializeInstanceForMain } from './worker-serialization';
+import { WorkerProxy } from './worker-proxy-constructor';
 
-export const HTMLCanvasDescriptorMap: PropertyDescriptorMap & ThisType<WorkerProxy> = {
+export const HTMLCanvasDescriptorMap: PropertyDescriptorMap & ThisType<Node> = {
   getContext: {
     value: function (...args: any[]) {
-      return proxy(InterfaceType.CanvasRenderingContext2D, this, [
+      return new WorkerProxy(this[WinIdKey], this[InstanceIdKey], [
         'getContext',
         serializeInstanceForMain(this, args),
       ]);

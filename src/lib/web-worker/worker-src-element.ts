@@ -1,9 +1,9 @@
 import { EventHandler, StateProp } from '../types';
-import { noop } from '../utils';
-import type { WorkerProxy } from './worker-proxy-constructor';
 import { getInstanceStateValue, setInstanceStateValue } from './worker-state';
+import { noop } from '../utils';
+import type { Node } from './worker-node';
 
-export const HTMLSrcElementProperties: PropertyDescriptorMap & ThisType<WorkerProxy> = {
+export const HTMLSrcElementProperties: PropertyDescriptorMap & ThisType<Node> = {
   async: {
     get: () => true,
     set: noop,
@@ -32,10 +32,10 @@ export const HTMLSrcElementProperties: PropertyDescriptorMap & ThisType<WorkerPr
   },
 };
 
-export const HTMLSrcElementMethods: ThisType<WorkerProxy> = {
+export const HTMLSrcElementMethods: ThisType<Node> = {
   addEventListener(...args: any[]) {
-    let eventName = args[0];
-    let callbacks = getInstanceStateValue<EventHandler[]>(this, eventName) || [];
+    const eventName = args[0];
+    const callbacks = getInstanceStateValue<EventHandler[]>(this, eventName) || [];
     callbacks.push(args[1]);
     setInstanceStateValue(this, eventName, callbacks);
   },

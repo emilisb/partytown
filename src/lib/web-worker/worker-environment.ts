@@ -1,14 +1,13 @@
 import { cachedDimensionProps, cachedReadonlyProps } from './worker-state';
-import { callMethod, createGlobalConstructorProxy, getter, proxy, setter } from './worker-proxy';
-// import { constructPlatformDocumentNode, HTMLDocument } from './worker-document';
+import { getter, setter } from './worker-proxy';
 import { createImageConstructor } from './worker-image';
 import { createNavigator } from './worker-navigator';
 import { debug, logWorker, normalizedWinId } from '../utils';
-import { createInstance, nodeConstructors, getOrCreateInstance } from './worker-constructors';
 import {
   environments,
   InstanceIdKey,
   InterfaceTypeKey,
+  nodeConstructors,
   webWorkerCtx,
   WinIdKey,
 } from './worker-constants';
@@ -21,6 +20,7 @@ import {
 } from '../types';
 import { Location } from './worker-location';
 import { WorkerProxy } from './worker-proxy-constructor';
+import { createNodeInstance, getOrCreateNodeInstance } from './worker-constructors';
 
 export const createEnvironment = ({
   $winId$,
@@ -52,15 +52,15 @@ export const createEnvironment = ({
         if ($isTop$) {
           return null;
         }
+
         // the winId of an iframe's window is the same
         // as the instanceId of the containing iframe element
         const env = getEnv(this);
         const iframeElementInstanceId = this[WinIdKey];
         const iframeElementWinId = env.$parentWinId$;
-        return getOrCreateInstance(
-          InterfaceType.Element,
-          iframeElementInstanceId,
+        return getOrCreateNodeInstance(
           iframeElementWinId,
+          iframeElementInstanceId,
           NodeName.IFrame
         );
       }
@@ -101,28 +101,17 @@ export const createEnvironment = ({
       }
     }
 
-    const $document$ = createInstance(InterfaceType.Document, PlatformInstanceId.document, $winId$);
+    const $document$ = createNodeInstance($winId$, PlatformInstanceId.document, NodeName.Document);
 
-    const $documentElement$ = createInstance(
-      InterfaceType.Element,
-      PlatformInstanceId.documentElement,
+    const $documentElement$ = createNodeInstance(
       $winId$,
+      PlatformInstanceId.documentElement,
       NodeName.DocumentElement
     );
 
-    const $head$ = createInstance(
-      InterfaceType.Element,
-      PlatformInstanceId.head,
-      $winId$,
-      NodeName.Head
-    );
+    const $head$ = createNodeInstance($winId$, PlatformInstanceId.head, NodeName.Head);
 
-    const $body$ = createInstance(
-      InterfaceType.Element,
-      PlatformInstanceId.body,
-      $winId$,
-      NodeName.Body
-    );
+    const $body$ = createNodeInstance($winId$, PlatformInstanceId.body, NodeName.Body);
 
     const $location$ = new Location($url$);
 
@@ -169,38 +158,38 @@ export const createEnvironment = ({
 
       // create interface properties found on window
       // window.history = {...}
-      webWorkerCtx.$windowMemberNames$.map((memberName) => {
-        const $interfaceType$ = webWorkerCtx.$windowMembers$[memberName];
-        const isFunctionInterface = $interfaceType$ === InterfaceType.Function;
-        const isValidInterface =
-          isFunctionInterface || $interfaceType$ > InterfaceType.DocumentFragmentNode;
+      // webWorkerCtx.$windowMemberNames$.map((memberName) => {
+      //   const $interfaceType$ = webWorkerCtx.$windowMembers$[memberName];
+      //   const isFunctionInterface = $interfaceType$ === InterfaceType.Function;
+      //   const isValidInterface =
+      //     isFunctionInterface || $interfaceType$ > InterfaceType.DocumentFragmentNode;
 
-        if (
-          isValidInterface &&
-          (!(memberName in win) || windowFunctionWhiteList.includes(memberName))
-        ) {
-          // functions or properites that were found on the main thread's window
-          // that should have a proxy created on this environment window
-          win[memberName] = isFunctionInterface
-            ? (...args: any[]) => callMethod(win, [memberName], args)
-            : proxy($interfaceType$, win, ['window', memberName]);
-        }
-      });
+      //   if (
+      //     isValidInterface &&
+      //     (!(memberName in win) || windowFunctionWhiteList.includes(memberName))
+      //   ) {
+      //     // functions or properites that were found on the main thread's window
+      //     // that should have a proxy created on this environment window
+      //     win[memberName] = isFunctionInterface
+      //       ? (...args: any[]) => callMethod(win, [memberName], args)
+      //       : proxy($interfaceType$, win, ['window', memberName]);
+      //   }
+      // });
 
       // create global constructor proxies
       // window.MutationObserver = class {...}
-      webWorkerCtx.$interfaces$.map((i) => {
-        const interfaceType = i[0];
-        const memberName = i[1];
-        win[memberName] = createGlobalConstructorProxy($winId$, interfaceType, memberName);
-      });
+      // webWorkerCtx.$interfaces$.map((i) => {
+      //   const interfaceType = i[0];
+      //   const memberName = i[1];
+      //   win[memberName] = createGlobalConstructorProxy($winId$, interfaceType, memberName);
+      // });
 
       win.Image = createImageConstructor($winId$);
       win.Window = Window;
 
       win.name = name + (debug ? `${normalizedWinId($winId$)} (${$winId$})` : ($winId$ as any));
       win.navigator = createNavigator($winId$);
-      win.screen = new WorkerProxy(InterfaceType.Screen, PlatformInstanceId.screen, $winId$);
+      win.screen = new WorkerProxy($winId$, PlatformInstanceId.window, ['screen']);
 
       windowPropertyWhiteList.map((propName) =>
         Object.defineProperty(win, propName, {

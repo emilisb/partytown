@@ -1,12 +1,11 @@
 import { callMethod, getter, setter } from './worker-proxy';
 import { getEnv } from './worker-environment';
 import { getInstanceStateValue, setInstanceStateValue } from './worker-state';
-// import { HTMLSrcElement } from './worker-element';
+import type { Node } from './worker-node';
 import { resolveUrl } from './worker-exec';
 import { StateProp } from '../types';
-import type { WorkerProxy } from './worker-proxy-constructor';
 
-const innerHTMLDescriptor: PropertyDescriptor & ThisType<WorkerProxy> = {
+const innerHTMLDescriptor: PropertyDescriptor & ThisType<Node> = {
   get() {
     return getInstanceStateValue<string>(this, StateProp.innerHTML) || '';
   },
@@ -15,7 +14,7 @@ const innerHTMLDescriptor: PropertyDescriptor & ThisType<WorkerProxy> = {
   },
 };
 
-export const HTMLScriptElement: PropertyDescriptorMap & ThisType<WorkerProxy> = {
+export const HTMLScriptElement: PropertyDescriptorMap & ThisType<Node> = {
   innerHTML: innerHTMLDescriptor,
   innerText: innerHTMLDescriptor,
 

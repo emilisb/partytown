@@ -1,11 +1,7 @@
-import { EventHandler, StateProp } from '../types';
-import { getInstanceStateValue, setInstanceStateValue } from './worker-state';
-// import { Node } from './worker-node';
-import type { WorkerProxy } from './worker-proxy-constructor';
 import { NodeNameKey } from './worker-constants';
-import { getter, proxy } from './worker-proxy';
+import type { Node } from './worker-node';
 
-export const ElementDescriptorMap: PropertyDescriptorMap & ThisType<WorkerProxy> = {
+export const ElementDescriptorMap: PropertyDescriptorMap & ThisType<Node> = {
   localName: {
     get() {
       return this[NodeNameKey]!.toLowerCase();
@@ -15,6 +11,9 @@ export const ElementDescriptorMap: PropertyDescriptorMap & ThisType<WorkerProxy>
     get() {
       return 'http://www.w3.org/' + (this[NodeNameKey] === 'SVG' ? '2000/svg' : '1999/xhtml');
     },
+  },
+  nodeType: {
+    value: 1,
   },
   tagName: {
     get() {

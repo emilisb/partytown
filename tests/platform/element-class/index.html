@@ -70,13 +70,16 @@
         <script type="text/partytown">
           (function() {
             const elm = document.getElementById('testClassList');
-            elm.classList.add('testClassList');
+
+            const classList = elm.classList;
+            debugger;
+            classList.add('testClassList');
             elm.textContent = elm.className;
           })();
         </script>
       </li>
 
-      <li>
+      <!-- <li>
         <strong>classList.remove()</strong>
         <code id="testClassListRemove" class="remove-me testClassListRemove"></code>
         <script type="text/partytown">
@@ -152,7 +155,7 @@
 
       <script type="text/partytown">
         document.body.classList.add('completed');
-      </script>
+      </script> -->
     </ul>
 
     <hr />

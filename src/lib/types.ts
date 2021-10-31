@@ -27,7 +27,7 @@ export type MessageFromWorkerToSandbox =
 
 export type MessageFromSandboxToWorker =
   | [WorkerMessageType.MainDataResponseToWorker, InitWebWorkerData]
-  | [WorkerMessageType.NodeConstructorsResponseToWorker, NodeConstructor[]]
+  | [WorkerMessageType.NodeConstructorsResponseToWorker, InterfaceInfo[]]
   | [WorkerMessageType.InitializeEnvironment, InitializeEnvironmentData]
   | [WorkerMessageType.InitializedEnvironment, WinId]
   | [WorkerMessageType.InitializeNextScript, InitializeScriptData]
@@ -85,19 +85,20 @@ export interface InitWebWorkerData {
 /**
  * [0] Constructor name
  * [1] Prototype parent construtor name
- * [2] Node Name
- * [3] NodeConstructorPropType[]
+ * [2] InterfaceMember[]
+ * [3] Node Name
  */
-export type NodeConstructor = [string, string, string, NodeConstructorMember[]];
+export type InterfaceInfo = [string, string, InterfaceMember[], string];
 
 /**
  * [0] Member name
- * [1] Constructor name or InterfaceType
+ * [1] Constructor name or interface type
  * [2]? If there's a value it's a static prop
  */
-export type NodeConstructorMember =
+export type InterfaceMember =
   | [string, string]
-  | [string, InterfaceType]
+  | [string, InterfaceType.Function]
+  | [string, InterfaceType.Property]
   | [string, InterfaceType.Property, string | number | boolean];
 
 export interface InitWebWorkerContext {
@@ -107,7 +108,7 @@ export interface InitWebWorkerContext {
 
 export interface WebWorkerContext extends InitWebWorkerData, InitWebWorkerContext {
   $forwardedTriggers$: string[];
-  $htmlConstructors$: NodeConstructor[];
+  $htmlConstructors$: InterfaceInfo[];
   $windowMembers$: MembersInterfaceTypeInfo;
   $windowMemberNames$: string[];
   lastLog?: string;
@@ -138,8 +139,6 @@ export interface WebWorkerGlobal {
   $interfaceType$: InterfaceType;
   $implementation$: any;
 }
-
-export type InterfaceInfo = [InterfaceType, string, MembersInterfaceTypeInfo];
 
 export interface MembersInterfaceTypeInfo {
   [memberName: string]: InterfaceType;
@@ -224,6 +223,7 @@ export type ApplyPath = any[];
 
 export const enum SerializedType {
   Array,
+  Attr,
   CSSRule,
   CSSRuleList,
   Event,
@@ -236,6 +236,8 @@ export const enum SerializedType {
 }
 
 export type SerializedArrayTransfer = [SerializedType.Array, (SerializedTransfer | undefined)[]];
+
+export type SerializedAttrTransfer = [SerializedType.Attr, SerializedAttr];
 
 export type SerializedCSSRuleTransfer = [SerializedType.CSSRule, SerializedCSSRule];
 
@@ -257,6 +259,8 @@ export type SerializedObjectTransfer = [
   { [key: string]: SerializedTransfer | undefined }
 ];
 
+export type SerializedAttr = [string, string];
+
 export type SerializedCSSRule = { [key: string]: string };
 
 export type SerializedPrimitiveTransfer =
@@ -268,11 +272,13 @@ export type SerializedRefTransfer = [SerializedType.Ref, SerializedRefTransferDa
 export interface SerializedRefTransferData {
   $winId$: number;
   $instanceId$: number;
+  $nodeName$?: string;
   $refId$: number;
 }
 
 export type SerializedTransfer =
   | SerializedArrayTransfer
+  | SerializedAttrTransfer
   | SerializedCSSRuleTransfer
   | SerializedCSSRuleListTransfer
   | SerializedEventTransfer
