@@ -55,8 +55,8 @@ export const createEnvironment = ({
         // the winId of an iframe's window is the same
         // as the instanceId of the containing iframe element
         const env = getEnv(this);
-        const iframeElementInstanceId = this[WinIdKey];
         const iframeElementWinId = env.$parentWinId$;
+        const iframeElementInstanceId = this[WinIdKey];
         return getOrCreateNodeInstance(
           iframeElementWinId,
           iframeElementInstanceId,

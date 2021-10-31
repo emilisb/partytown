@@ -181,8 +181,8 @@ const deserializeObjectFromMain = (
 };
 
 export const getOrCreateSerializedInstance = ({
-  $instanceId$,
   $winId$,
+  $instanceId$,
   $nodeName$,
 }: SerializedInstance): any =>
   getPlatformInstance($winId$, $instanceId$) ||

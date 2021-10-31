@@ -4,6 +4,7 @@ import {
   cachedTree,
   InstanceIdKey,
   nodeConstructors,
+  NodeNameKey,
   WinIdKey,
 } from './worker-constants';
 import { callMethod, getter, queue, setter } from './worker-proxy';
@@ -72,7 +73,11 @@ export const defineWorkerInterface = (interfaceInfo: InterfaceInfo) => {
   });
 };
 
-const TrapConstructors: { [cstrName: string]: 1 } = { CSSStyleDeclaration: 1, NamedNodeMap: 1 };
+const TrapConstructors: { [cstrName: string]: 1 } = {
+  CSSStyleDeclaration: 1,
+  DOMStringMap: 1,
+  NamedNodeMap: 1,
+};
 
 export const patchPrototypes = () => {
   definePrototypePropertyDescriptor(self.Element, ElementDescriptorMap);
@@ -109,8 +114,9 @@ const defineProxyProperty = (Cstr: WorkerProxy, memberName: string, proxiedCstrN
       const winId = this[WinIdKey];
       const instanceId = this[InstanceIdKey];
       const applyPath = [...this[ApplyPathKey], memberName];
+      const nodeName = this[NodeNameKey];
       const PropCstr: typeof WorkerProxy = (self as any)[proxiedCstrName];
-      const propInstance = new PropCstr(winId, instanceId, applyPath);
+      const propInstance = new PropCstr(winId, instanceId, applyPath, nodeName);
       return propInstance;
     },
   });

@@ -147,20 +147,21 @@ const logTargetProp = (target: any, accessType: 'Get' | 'Set' | 'Call', applyPat
       n = 'document.head.';
     } else if (instanceId === PlatformInstanceId.body) {
       n = 'document.body.';
-    } else if (target.nodeType === InterfaceType.Element) {
-      n = target.nodeName.toLowerCase() + 'Element.';
-    } else if (target.nodeType === InterfaceType.TextNode) {
-      n = 'textNode.';
-    } else if (target.nodeType === InterfaceType.CommentNode) {
-      n = 'commentNode.';
-    } else if (target.nodeType === InterfaceType.DocumentFragmentNode) {
-      n = 'fragment.';
-    } else if (target.nodeType === InterfaceType.DocumentTypeNode) {
-      n = 'documentTypeNode.';
+    } else if (target[NodeNameKey]) {
+      let nodeName: string = target[NodeNameKey];
+      if (nodeName === NodeName.Text) {
+        n = 'textNode.';
+      } else if (nodeName === NodeName.Comment) {
+        n = 'commentNode.';
+      } else if (nodeName === NodeName.Document) {
+        n = 'document.';
+      } else if (nodeName === NodeName.DocumentTypeNode) {
+        n = 'doctype.';
+      } else {
+        n = target.nodeName.toLowerCase() + 'Element.';
+      }
     } else if (target.nodeType === InterfaceType.AttributeNode) {
       n = 'attributes.';
-    } else if (target.nodeType <= InterfaceType.DocumentFragmentNode) {
-      n = 'node.';
     } else if (cstrName === 'CanvasRenderingContext2D') {
       n = 'context2D.';
     } else if (cstrName === 'CSSStyleDeclaration') {
