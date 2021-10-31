@@ -20,12 +20,15 @@ export const readMainPlatform = (win: any) => {
 
 const readMainInterfaces = (win: any, doc: Document) => {
   const startTime = debug ? performance.now() : 0;
+
   const docImpl = doc.implementation.createHTMLDocument();
   const text = docImpl.createTextNode('');
   const comment = docImpl.createComment('');
   const frag = docImpl.createDocumentFragment();
   const elm = docImpl.createElement('i');
   const svg = docImpl.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  const canvas = docImpl.createElement('canvas');
+  const canvasRenderingContext2D = canvas.getContext('2d');
 
   // get all HTML*Element constructors on window
   // and create each element to get their implementation
@@ -48,6 +51,7 @@ const readMainInterfaces = (win: any, doc: Document) => {
     svg,
     docImpl,
     docImpl.doctype!,
+    canvasRenderingContext2D!,
     ...elms,
   ].map((impl) => {
     const cstrName = impl.constructor.name;

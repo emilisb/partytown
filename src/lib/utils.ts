@@ -160,8 +160,8 @@ const logTargetProp = (target: any, accessType: 'Get' | 'Set' | 'Call', applyPat
       n = 'mutationObserver.';
     } else if (cstrName === 'ResizeObserver') {
       n = 'resizeObserver.';
-    } else if (cstrName === 'Screen') {
-      n = 'screen.';
+    } else if (cstrName === 'CanvasRenderingContext2D') {
+      n = 'context2D.';
     } else {
       n = '¯\\_(ツ)_/¯ TARGET.';
       console.warn('¯\\_(ツ)_/¯ TARGET', target);
