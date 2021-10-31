@@ -4,9 +4,9 @@ import { createImageConstructor } from './worker-image';
 import { createNavigator } from './worker-navigator';
 import { debug, logWorker, normalizedWinId } from '../utils';
 import {
+  ApplyPathKey,
   environments,
   InstanceIdKey,
-  InterfaceTypeKey,
   nodeConstructors,
   webWorkerCtx,
   WinIdKey,
@@ -37,11 +37,10 @@ export const createEnvironment = ({
     class Window {
       [WinIdKey]: number;
       [InstanceIdKey]: number;
-      [InterfaceTypeKey]: InterfaceType;
+      [ApplyPathKey]: string[];
 
       constructor() {
         initWindowInstance(this);
-        // return proxy(InterfaceType.Window, this, []);
       }
 
       get document() {
@@ -122,9 +121,8 @@ export const createEnvironment = ({
 
     const initWindowInstance = (win: any) => {
       win[WinIdKey] = $winId$;
-
-      // InterfaceType.Window and PlatformInstanceId.window both = 0
-      win[InstanceIdKey] = win[InterfaceTypeKey] = PlatformInstanceId.window;
+      win[InstanceIdKey] = PlatformInstanceId.window;
+      win[ApplyPathKey] = [];
 
       // bind web worker global functions to the environment window
       // window.atob = self.atob.bind(self);

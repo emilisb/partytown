@@ -9,7 +9,6 @@ import type { Node } from './worker-node';
 
 export const WinIdKey = Symbol();
 export const InstanceIdKey = Symbol();
-export const InterfaceTypeKey = Symbol();
 export const NodeNameKey = Symbol();
 export const ApplyPathKey = Symbol();
 

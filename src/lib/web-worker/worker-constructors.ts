@@ -16,7 +16,7 @@ export const createNodeInstance = (winId: number, instanceId: number, nodeName: 
     : nodeName!.includes('-')
     ? nodeConstructors.UNKNOWN
     : (self as any).HTMLElement;
-  return new NodeCstr(winId, instanceId, nodeName);
+  return new NodeCstr(winId, instanceId, [], nodeName);
 };
 
 export const constructEvent = (eventProps: any) =>

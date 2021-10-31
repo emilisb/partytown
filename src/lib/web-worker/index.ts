@@ -39,14 +39,9 @@ const receiveMessageFromSandboxToWorker = (ev: MessageEvent<MessageFromSandboxTo
     }
   } else if (msgType === WorkerMessageType.MainDataResponseToWorker) {
     // received initial main data
-    // merge it into the web worker context object
-    Object.assign(webWorkerCtx, msg[1]);
-    // we're not done yet, let's also request all the HTML constructor data too
-    // splitting out initialization into multiple postMessages so it's not a long running task
-    postMessage([WorkerMessageType.NodeConstructorsRequestFromWorker]);
-  } else if (msgType === WorkerMessageType.NodeConstructorsResponseToWorker) {
     // initialize the web worker with the received the main data
     initWebWorker(msg[1]);
+
     // send to the main thread that the web worker has been initialized
     webWorkerCtx.$postMessage$([WorkerMessageType.InitializedWebWorker]);
 

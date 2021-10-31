@@ -15,7 +15,7 @@ export const DocumentDescriptorMap: PropertyDescriptorMap & ThisType<Node> = {
   },
 
   createElement: {
-    value: function (tagName: string) {
+    value(tagName: string) {
       tagName = tagName.toUpperCase();
 
       const winId = this[WinIdKey];
@@ -39,7 +39,7 @@ export const DocumentDescriptorMap: PropertyDescriptorMap & ThisType<Node> = {
   },
 
   createElementNS: {
-    value: function (ns: string, tagName: string) {
+    value(ns: string, tagName: string) {
       tagName = tagName.toUpperCase();
       const winId = this[WinIdKey];
       const instanceId = randomId();
@@ -52,7 +52,7 @@ export const DocumentDescriptorMap: PropertyDescriptorMap & ThisType<Node> = {
   },
 
   createTextNode: {
-    value: function (text: string) {
+    value(text: string) {
       const winId = this[WinIdKey];
       const instanceId = randomId();
 
@@ -92,7 +92,7 @@ export const DocumentDescriptorMap: PropertyDescriptorMap & ThisType<Node> = {
   },
 
   getElementsByTagName: {
-    value: function (tagName: string) {
+    value(tagName: string) {
       tagName = tagName.toUpperCase();
       if (tagName === NodeName.Body) {
         return [getEnv(this).$body$];

@@ -8,13 +8,6 @@ import { SCRIPT_TYPE, SCRIPT_TYPE_EXEC } from '../utils';
 import { WorkerProxy } from './worker-proxy-constructor';
 
 export class Node extends WorkerProxy {
-  [NodeNameKey]: string;
-
-  constructor(winId: number, instanceId: number, nodeName: string) {
-    super(winId, instanceId);
-    this[NodeNameKey] = nodeName;
-  }
-
   appendChild(node: Node) {
     return this.insertBefore(node, null);
   }
@@ -63,6 +56,7 @@ export class Node extends WorkerProxy {
   }
 
   get nodeName() {
+    debugger;
     return this[NodeNameKey];
   }
 

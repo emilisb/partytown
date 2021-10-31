@@ -1,11 +1,5 @@
 import { ApplyPath, InterfaceType, NodeName, PlatformInstanceId } from './types';
-import {
-  InstanceIdKey,
-  InterfaceTypeKey,
-  NodeNameKey,
-  webWorkerCtx,
-  WinIdKey,
-} from './web-worker/worker-constants';
+import { InstanceIdKey, NodeNameKey, webWorkerCtx, WinIdKey } from './web-worker/worker-constants';
 
 export const debug = (globalThis as any).partytownDebug;
 
@@ -100,6 +94,7 @@ export const logWorkerSetter = (
 ) => {
   if (debug && webWorkerCtx.$config$.logSetters) {
     try {
+      applyPath = applyPath.slice(0, applyPath.length - 2);
       logWorker(
         `Set ${logTargetProp(target, 'Set', applyPath)}, value: ${logValue(applyPath, value)}${
           restrictedToWorker ? ' (restricted to worker)' : ''
@@ -113,6 +108,7 @@ export const logWorkerSetter = (
 export const logWorkerCall = (target: any, applyPath: ApplyPath, args: any[], rtnValue: any) => {
   if (debug && webWorkerCtx.$config$.logCalls) {
     try {
+      applyPath = applyPath.slice(0, applyPath.length - 1);
       logWorker(
         `Call ${logTargetProp(target, 'Call', applyPath)}(${args
           .map((v) => logValue(applyPath, v))
@@ -135,8 +131,8 @@ const logTargetProp = (target: any, accessType: 'Get' | 'Set' | 'Call', applyPat
   let n = '';
   if (target) {
     const instanceId = target[InstanceIdKey];
-    const interfaceType = target[InterfaceTypeKey];
-    if (interfaceType === InterfaceType.Window) {
+    const cstrName = getConstructorName(target);
+    if (instanceId === PlatformInstanceId.window) {
       n = '';
     } else if (instanceId === PlatformInstanceId.document) {
       n = 'document.';
@@ -146,25 +142,25 @@ const logTargetProp = (target: any, accessType: 'Get' | 'Set' | 'Call', applyPat
       n = 'document.head.';
     } else if (instanceId === PlatformInstanceId.body) {
       n = 'document.body.';
-    } else if (target.nodeType === 1) {
+    } else if (target.nodeType === InterfaceType.Element) {
       n = target.nodeName.toLowerCase() + '.';
-    } else if (interfaceType === InterfaceType.Element && target[NodeNameKey]) {
-      n = `<${target[NodeNameKey].toLowerCase()}>`;
-    } else if (interfaceType === InterfaceType.CommentNode) {
+    } else if (target.nodeType === InterfaceType.CommentNode) {
       n = 'comment.';
-    } else if (interfaceType === InterfaceType.AttributeNode) {
+    } else if (target.nodeType === InterfaceType.AttributeNode) {
       n = 'attributes.';
-    } else if (interfaceType === InterfaceType.DocumentFragmentNode) {
+    } else if (target.nodeType === InterfaceType.DocumentFragmentNode) {
       n = 'fragment.';
-    } else if (interfaceType === InterfaceType.DocumentTypeNode) {
+    } else if (target.nodeType === InterfaceType.DocumentTypeNode) {
       n = 'documentTypeNode.';
-    } else if (interfaceType <= InterfaceType.DocumentFragmentNode) {
+    } else if (target.nodeType <= InterfaceType.DocumentFragmentNode) {
       n = 'node.';
-    } else if (interfaceType === InterfaceType.MutationObserver) {
+    } else if (cstrName === 'CSSStyleDeclaration') {
+      n = 'style.';
+    } else if (cstrName === 'MutationObserver') {
       n = 'mutationObserver.';
-    } else if (interfaceType === InterfaceType.ResizeObserver) {
+    } else if (cstrName === 'ResizeObserver') {
       n = 'resizeObserver.';
-    } else if (interfaceType === InterfaceType.Screen) {
+    } else if (cstrName === 'Screen') {
       n = 'screen.';
     } else {
       n = '¯\\_(ツ)_/¯ TARGET.';
@@ -203,7 +199,6 @@ const logValue = (applyPath: ApplyPath, v: any): string => {
   }
   if (type === 'object') {
     const instanceId: number = v[InstanceIdKey];
-    const interfaceType: InterfaceType = v[InterfaceTypeKey];
     if (typeof instanceId === 'number') {
       if (instanceId === PlatformInstanceId.body) {
         return `<body>`;
@@ -217,24 +212,25 @@ const logValue = (applyPath: ApplyPath, v: any): string => {
       if (instanceId === PlatformInstanceId.head) {
         return `<head>`;
       }
-      if (interfaceType === InterfaceType.Window) {
+      if (instanceId === PlatformInstanceId.window) {
         return `window`;
       }
-      if (interfaceType === InterfaceType.Screen) {
-        return `screen`;
-      }
-      if (interfaceType === InterfaceType.Element && v[NodeNameKey]) {
-        return `<${v[NodeNameKey].toLowerCase()}>`;
-      }
-      if (interfaceType === InterfaceType.DocumentTypeNode) {
-        return `<!DOCTYPE ${v[NodeNameKey]}>`;
-      }
-      if (interfaceType <= InterfaceType.DocumentFragmentNode) {
-        return v[NodeNameKey];
+
+      if (v[NodeNameKey]) {
+        if (v.nodeType === 1) {
+          return `<${v[NodeNameKey].toLowerCase()}>`;
+        }
+        if (v.nodeType === InterfaceType.DocumentTypeNode) {
+          return `<!DOCTYPE ${v[NodeNameKey]}>`;
+        }
+        if (v.nodeType <= InterfaceType.DocumentFragmentNode) {
+          return v[NodeNameKey];
+        }
       }
 
       return '¯\\_(ツ)_/¯ instance obj';
     }
+
     if (v[Symbol.iterator]) {
       return `[${Array.from(v)
         .map((i) => logValue(applyPath, i))

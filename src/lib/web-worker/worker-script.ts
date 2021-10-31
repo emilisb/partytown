@@ -30,7 +30,7 @@ export const HTMLScriptElement: PropertyDescriptorMap & ThisType<Node> = {
   },
 
   getAttribute: {
-    value: function (attrName: string) {
+    value(attrName: string) {
       if (attrName === 'src') {
         return (this as any).src;
       }
@@ -39,7 +39,7 @@ export const HTMLScriptElement: PropertyDescriptorMap & ThisType<Node> = {
   },
 
   setAttribute: {
-    value: function (attrName: string, attrValue: any) {
+    value(attrName: string, attrValue: any) {
       if (attrName === 'src') {
         (this as any).src = attrValue;
       } else {

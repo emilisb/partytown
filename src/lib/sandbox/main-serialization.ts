@@ -50,7 +50,6 @@ export const serializeForWorker = (
           SerializedType.Instance,
           {
             $winId$,
-            $interfaceType$: InterfaceType.Window,
             $instanceId$: PlatformInstanceId.window,
           },
         ];
@@ -88,7 +87,6 @@ export const serializeForWorker = (
           SerializedType.Instance,
           {
             $winId$,
-            $interfaceType$: value.nodeType,
             $instanceId$: getAndSetInstanceId(value),
             $nodeName$: value.nodeName,
           },

@@ -5,11 +5,10 @@ import { WorkerProxy } from './worker-proxy-constructor';
 
 export const HTMLCanvasDescriptorMap: PropertyDescriptorMap & ThisType<Node> = {
   getContext: {
-    value: function (...args: any[]) {
-      return new WorkerProxy(this[WinIdKey], this[InstanceIdKey], [
-        'getContext',
-        serializeInstanceForMain(this, args),
-      ]);
+    value(...args: any[]) {
+      debugger;
+      const applyPath = ['getContext', serializeInstanceForMain(this, args)];
+      return new WorkerProxy(this[WinIdKey], this[InstanceIdKey], applyPath);
     },
   },
 };

@@ -20,14 +20,12 @@ export type WinId = number;
 
 export type MessageFromWorkerToSandbox =
   | [WorkerMessageType.MainDataRequestFromWorker]
-  | [WorkerMessageType.NodeConstructorsRequestFromWorker]
   | [WorkerMessageType.InitializedWebWorker]
   | [WorkerMessageType.InitializedEnvironmentScript, WinId, number, string]
   | [WorkerMessageType.InitializeNextScript, WinId];
 
 export type MessageFromSandboxToWorker =
   | [WorkerMessageType.MainDataResponseToWorker, InitWebWorkerData]
-  | [WorkerMessageType.NodeConstructorsResponseToWorker, InterfaceInfo[]]
   | [WorkerMessageType.InitializeEnvironment, InitializeEnvironmentData]
   | [WorkerMessageType.InitializedEnvironment, WinId]
   | [WorkerMessageType.InitializeNextScript, InitializeScriptData]
@@ -37,8 +35,6 @@ export type MessageFromSandboxToWorker =
 export const enum WorkerMessageType {
   MainDataRequestFromWorker,
   MainDataResponseToWorker,
-  NodeConstructorsRequestFromWorker,
-  NodeConstructorsResponseToWorker,
   InitializedWebWorker,
   InitializeEnvironment,
   InitializedEnvironment,
@@ -174,13 +170,11 @@ export const enum InterfaceType {
   MutationObserver = 18,
   NamedNodeMap = 19,
   ResizeObserver = 20,
-  Screen = 21,
   Storage = 22,
 }
 
 export const enum PlatformInstanceId {
   window,
-  screen,
   document,
   documentElement,
   head,
@@ -298,10 +292,6 @@ export interface SerializedObject {
 export interface SerializedInstance {
   $winId$: number;
   $instanceId$?: number;
-  /**
-   * Node Type for Element (1), Text (3) and Document (9)
-   */
-  $interfaceType$: InterfaceType;
   /**
    * Node name for Node instances
    */

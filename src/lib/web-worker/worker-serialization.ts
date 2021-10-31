@@ -13,7 +13,6 @@ import { constructEvent, getOrCreateNodeInstance } from './worker-constructors';
 import {
   environments,
   InstanceIdKey,
-  InterfaceTypeKey,
   NodeNameKey,
   webWorkerRefIdsByRef,
   webWorkerRefsByRefId,
@@ -64,7 +63,6 @@ export const serializeForMain = (
           SerializedType.Instance,
           {
             $winId$: value[WinIdKey],
-            $interfaceType$: value[InterfaceTypeKey],
             $instanceId$: value[InstanceIdKey],
             $nodeName$: value[NodeNameKey],
           },

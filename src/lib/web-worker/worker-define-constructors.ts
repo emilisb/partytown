@@ -1,5 +1,4 @@
 import { ApplyPathType, InterfaceInfo, InterfaceType } from '../types';
-import { defineConstructorName, logWorkerGlobalConstructor, randomId } from '../utils';
 import {
   ApplyPathKey,
   cachedTree,
@@ -7,14 +6,15 @@ import {
   nodeConstructors,
   WinIdKey,
 } from './worker-constants';
-import { Node } from './worker-node';
-import { WorkerProxy } from './worker-proxy-constructor';
-import { serializeForMain } from './worker-serialization';
 import { callMethod, getter, queue, setter } from './worker-proxy';
-import { ElementDescriptorMap } from './worker-element';
+import { defineConstructorName, logWorkerGlobalConstructor, randomId } from '../utils';
 import { DocumentDescriptorMap } from './worker-document';
+import { ElementDescriptorMap } from './worker-element';
 import { HTMLAnchorDescriptorMap } from './worker-anchor';
 import { HTMLCanvasDescriptorMap } from './worker-canvas';
+import { Node } from './worker-node';
+import { serializeForMain } from './worker-serialization';
+import { WorkerProxy, WorkerTrapProxy } from './worker-proxy-constructor';
 
 export const defineWorkerInterface = (interfaceInfo: InterfaceInfo) => {
   const cstrName = interfaceInfo[0];
@@ -22,19 +22,20 @@ export const defineWorkerInterface = (interfaceInfo: InterfaceInfo) => {
   const members = interfaceInfo[2];
   const nodeName = interfaceInfo[3];
 
-  const SuperCstr =
-    superCstrName === 'EventTarget'
-      ? Node
-      : superCstrName === 'Object'
-      ? WorkerProxy
-      : (self as any)[superCstrName];
+  const SuperCstr = TrapConstructors[cstrName]
+    ? WorkerTrapProxy
+    : superCstrName === 'Object'
+    ? WorkerProxy
+    : (self as any)[superCstrName];
 
   const Cstr = ((self as any)[cstrName] = defineConstructorName(
     class extends SuperCstr {},
     cstrName
   ));
 
-  nodeConstructors[nodeName] = Cstr;
+  if (nodeName) {
+    nodeConstructors[nodeName] = Cstr;
+  }
 
   members.map(([memberName, memberType, staticValue]) => {
     if (!(memberName in Cstr.prototype)) {
@@ -70,6 +71,8 @@ export const defineWorkerInterface = (interfaceInfo: InterfaceInfo) => {
     }
   });
 };
+
+const TrapConstructors: { [cstrName: string]: 1 } = { CSSStyleDeclaration: 1 };
 
 export const patchPrototypes = () => {
   definePrototypePropertyDescriptor(self.Element, ElementDescriptorMap);
