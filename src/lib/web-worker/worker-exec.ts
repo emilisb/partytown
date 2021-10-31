@@ -9,7 +9,6 @@ import {
 import { environments, InstanceIdKey, webWorkerCtx } from './worker-constants';
 import { getEnv } from './worker-environment';
 import { getInstanceStateValue, getStateValue, setStateValue } from './worker-state';
-import type { Location } from './worker-location';
 import type { WorkerProxy } from './worker-proxy-constructor';
 
 export const initNextScriptsInWebWorker = async (initScript: InitializeScriptData) => {
@@ -153,11 +152,11 @@ const resolveToUrl = (env: WebWorkerEnvironment, url?: string, baseLocation?: Lo
   while (!baseLocation.host) {
     env = environments[env.$parentWinId$];
     baseLocation = env.$location$;
-    if (env.$isTop$) {
+    if (env.$winId$ === env.$parentWinId$) {
       break;
     }
   }
-  return new URL(url || '', baseLocation);
+  return new URL(url || '', baseLocation as any);
 };
 
 export const resolveUrl = (env: WebWorkerEnvironment, url?: string) => resolveToUrl(env, url) + '';

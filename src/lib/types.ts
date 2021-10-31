@@ -1,7 +1,3 @@
-// import type { HTMLDocument } from './web-worker/worker-document';
-// import type { HTMLElement } from './web-worker/worker-element';
-import type { Location } from './web-worker/worker-location';
-
 export type CreateWorker = (workerName: string) => Worker;
 
 export type Messenger = (
@@ -113,7 +109,6 @@ export interface WebWorkerContext extends InitWebWorkerData, InitWebWorkerContex
 export interface InitializeEnvironmentData {
   $winId$: number;
   $parentWinId$: number;
-  $isTop$?: number;
   $url$: string;
 }
 

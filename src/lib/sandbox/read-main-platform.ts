@@ -22,7 +22,7 @@ const readMainInterfaces = (win: any, doc: Document) => {
   const startTime = debug ? performance.now() : 0;
 
   const docImpl = doc.implementation.createHTMLDocument();
-  const text = docImpl.createTextNode('');
+  const textNode = docImpl.createTextNode('');
   const comment = docImpl.createComment('');
   const frag = docImpl.createDocumentFragment();
   const elm = docImpl.createElement('i');
@@ -40,7 +40,8 @@ const readMainInterfaces = (win: any, doc: Document) => {
     });
 
   const impls: any[] = [
-    text,
+    win,
+    textNode,
     comment,
     frag,
     elm,
@@ -59,16 +60,7 @@ const readMainInterfaces = (win: any, doc: Document) => {
     return [cstrName, CstrPrototype, impl];
   });
 
-  const nodeInterfaceMembers: InterfaceMember[] = [];
-  for (const memberName in text) {
-    // using for-in loop so we get everything on node (to include EventTarget)
-    readImplentationMember(nodeInterfaceMembers, text, memberName);
-  }
-
-  // setter Node's super constructor as Object so web worker uses it's own base class
-  const nodeInterfaceInfo: InterfaceInfo = ['Node', 'Object', nodeInterfaceMembers, text.nodeName];
-
-  const interfaces: InterfaceInfo[] = [nodeInterfaceInfo];
+  const interfaces: InterfaceInfo[] = [];
 
   impls.map(([cstrName, CstrPrototype, impl]) =>
     readImplentation(interfaces, cstrName, CstrPrototype, impl)

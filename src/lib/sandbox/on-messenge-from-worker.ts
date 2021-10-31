@@ -24,7 +24,7 @@ export const onMessageFromWebWorker = (
     worker.postMessage([WorkerMessageType.MainDataResponseToWorker, readMainPlatform(mainWindow)]);
   } else if (msgType === WorkerMessageType.InitializedWebWorker) {
     // web worker has finished initializing and ready to run scripts
-    registerWindow(worker, randomId(), mainWindow, 1);
+    registerWindow(worker, randomId(), mainWindow);
   } else {
     const winCtx = winCtxs[msg[1]]!;
     if (winCtx) {

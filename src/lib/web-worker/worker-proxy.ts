@@ -6,6 +6,13 @@ import {
   MainAccessTask,
 } from '../types';
 import {
+  ApplyPathKey,
+  cachedDimensions,
+  InstanceIdKey,
+  webWorkerCtx,
+  WinIdKey,
+} from './worker-constants';
+import {
   debug,
   len,
   logWorker,
@@ -14,15 +21,8 @@ import {
   logWorkerSetter,
   randomId,
 } from '../utils';
-import {
-  ApplyPathKey,
-  cachedDimensions,
-  InstanceIdKey,
-  webWorkerCtx,
-  WinIdKey,
-} from './worker-constants';
-import syncSendMessage from '@sync-send-message-to-main';
 import { deserializeFromMain, serializeInstanceForMain } from './worker-serialization';
+import syncSendMessage from '@sync-send-message-to-main';
 import type { WorkerProxy } from './worker-proxy-constructor';
 
 const taskQueue: MainAccessTask[] = [];

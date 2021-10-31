@@ -22,7 +22,7 @@ export const defineWorkerInterface = (interfaceInfo: InterfaceInfo) => {
   const superCstrName = interfaceInfo[1];
   const members = interfaceInfo[2];
   const nodeName = interfaceInfo[3];
-
+  console.log(cstrName, 'extends', superCstrName, nodeName);
   const SuperCstr = TrapConstructors[cstrName]
     ? WorkerTrapProxy
     : superCstrName === 'Object'
