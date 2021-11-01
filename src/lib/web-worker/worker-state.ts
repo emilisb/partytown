@@ -1,13 +1,10 @@
-import { callMethod, getter } from './worker-proxy';
 import {
-  cachedDimensions,
   InstanceIdKey,
   webWorkerRefIdsByRef,
   webWorkerRefsByRefId,
   webWorkerState,
-  WinIdKey,
 } from './worker-constants';
-import { EMPTY_ARRAY, randomId } from '../utils';
+import { randomId } from '../utils';
 import type { RefHandler, StateRecord } from '../types';
 import type { WorkerProxy } from './worker-proxy-constructor';
 

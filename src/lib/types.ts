@@ -78,9 +78,11 @@ export interface InitWebWorkerData {
  * [0] Constructor name
  * [1] Prototype parent construtor name
  * [2] InterfaceMember[]
- * [3] Node Name
+ * [3]? Node Name
  */
-export type InterfaceInfo = [string, string, InterfaceMember[], string];
+export type InterfaceInfo =
+  | [string, string, InterfaceMember[], string]
+  | [string, string, InterfaceMember[]];
 
 /**
  * [0] Member name
@@ -285,7 +287,7 @@ export interface SerializedObject {
 
 export interface SerializedInstance {
   $winId$: number;
-  $instanceId$?: number;
+  $instanceId$: number;
   /**
    * Node name for Node instances
    */

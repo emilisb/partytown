@@ -42,7 +42,6 @@ const readMainInterfaces = (win: any, doc: Document) => {
     });
 
   const impls: any[] = [
-    win,
     win.localStorage,
     win.history,
     win.screen,
@@ -74,6 +73,13 @@ const readMainInterfaces = (win: any, doc: Document) => {
   impls.map(([cstrName, CstrPrototype, impl]) =>
     readImplentation(interfaces, cstrName, CstrPrototype, impl)
   );
+
+  const windowInterfaceMembers: InterfaceMember[] = [];
+  const windowInterface: InterfaceInfo = ['Window', 'EventTarget', windowInterfaceMembers];
+  for (const winMemberName in win) {
+    readImplentationMember(windowInterfaceMembers, win, winMemberName);
+  }
+  interfaces.push(windowInterface);
 
   if (debug) {
     logMain(

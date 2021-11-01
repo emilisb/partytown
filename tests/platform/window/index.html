@@ -52,7 +52,7 @@
   <body>
     <h1>Window</h1>
     <ul>
-      <li>
+      <!-- <li>
         <strong>Window.name</strong>
         <code id="testWindowName"></code>
         <script type="text/partytown">
@@ -121,8 +121,8 @@
             elm.textContent = style.color;
           })();
         </script>
-      </li>
-
+      </li> 
+      
       <li>
         <strong>requestAnimationFrame()</strong>
         <code id="testRaf"></code>
@@ -132,6 +132,20 @@
               const elm = document.getElementById('testRaf');
               elm.textContent = true;
               elm.classList.add('testRaf');
+            });
+          })();
+        </script>
+      </li>
+
+      <li>
+        <strong>window.requestAnimationFrame()</strong>
+        <code id="testWindowRaf"></code>
+        <script type="text/partytown">
+          (function () {
+            window.requestAnimationFrame(() => {
+              const elm = document.getElementById('testWindowRaf');
+              elm.textContent = true;
+              elm.classList.add('testWindowRaf');
             });
           })();
         </script>
@@ -155,7 +169,7 @@
             a.textContent = v2;
           })();
         </script>
-      </li>
+      </li>-->
 
       <li>
         <button id="button-prompt">prompt()</button>
@@ -171,7 +185,7 @@
         </script>
       </li>
 
-      <li>
+      <!--<li>
         <strong>Worker HTML Constructors</strong>
         <code id="wwHTMLConstructors"></code>
         <script type="text/partytown">
@@ -440,7 +454,7 @@
         (function () {
           document.body.classList.add('completed');
         })();
-      </script>
+      </script> -->
     </ul>
 
     <hr />

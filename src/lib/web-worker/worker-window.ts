@@ -1,89 +1,136 @@
 import { createNavigator } from './worker-navigator';
 import { createImageConstructor } from './worker-image';
 import { createNodeInstance, getOrCreateNodeInstance } from './worker-constructors';
-import { debug, normalizedWinId } from '../utils';
+import { debug, definePrototypeValue, normalizedWinId } from '../utils';
 import { environments, WinIdKey } from './worker-constants';
 import { getEnv } from './worker-environment';
 import { Location } from './worker-location';
 import { NodeName, PlatformInstanceId } from '../types';
 import { WorkerProxy } from './worker-proxy-constructor';
 
-const LocationKey = Symbol();
-const ParentWinIdKey = Symbol();
-
 export class Window extends WorkerProxy {
-  [LocationKey]: Location;
-  [ParentWinIdKey]: number;
-  Image: any;
-  Window: any;
+  constructor($winId$: number, $parentWinId$: number, url: string) {
+    super($winId$, PlatformInstanceId.window);
 
-  body: HTMLBodyElement;
-  document: Document;
-  documentElement: HTMLHtmlElement;
-  globalThis: Window;
-  head: HTMLHeadElement;
-  name: string;
-  navigator: Navigator;
-  self: Window;
-  window: Window;
-
-  constructor(winId: number, parentWinId: number, url: string) {
-    super(winId, PlatformInstanceId.window);
-
-    this.document = createNodeInstance(
-      winId,
+    const $document$ = createNodeInstance(
+      $winId$,
       PlatformInstanceId.document,
       NodeName.Document
     ) as any;
 
-    this.documentElement = createNodeInstance(
-      winId,
+    const $documentElement$ = createNodeInstance(
+      $winId$,
       PlatformInstanceId.documentElement,
       NodeName.DocumentElement
     ) as any;
 
-    this.head = createNodeInstance(winId, PlatformInstanceId.head, NodeName.Head) as any;
+    const $head$ = createNodeInstance($winId$, PlatformInstanceId.head, NodeName.Head) as any;
 
-    this.body = createNodeInstance(winId, PlatformInstanceId.body, NodeName.Body) as any;
+    const $body$ = createNodeInstance($winId$, PlatformInstanceId.body, NodeName.Body) as any;
 
-    this[LocationKey] = new Location(url);
-    this[ParentWinIdKey] = parentWinId;
+    environments[$winId$] = {
+      $winId$,
+      $parentWinId$,
+      $window$: this as any,
+      $document$,
+      $documentElement$,
+      $head$,
+      $body$,
+      $location$: new Location(url) as any,
+    };
 
-    this.globalThis = this.self = this.window = this;
+    // assign global properties already in the web worker global
+    // that we can put onto the environment window
+    for (const globalName in self) {
+      console.log(globalName);
+      if (!(globalName in this)) {
+        // global properties already in the web worker global
+        const value = self[globalName] as any;
+        if (value != null) {
+          // function examples: atob(), fetch()
+          // object examples: crypto, performance, indexedDB
+          // boolean examples: isSecureContext, crossOriginIsolated
+          const isFunction = typeof value === 'function' && !value.toString().startsWith('class');
+          (this as any)[globalName] = isFunction ? value.bind(self) : value;
+        }
+      }
+    }
 
-    this.Image = createImageConstructor(winId);
-    this.Window = Window;
+    // assign web worker global properties to the environment window
+    // window.Promise = self.Promise
+    Object.getOwnPropertyNames(self).map((globalName) => {
+      if (!(globalName in this)) {
+        console.log(globalName);
+        (this as any)[globalName] = (self as any)[globalName];
+      }
+    });
+  }
 
-    this.name = name + (debug ? `${normalizedWinId(winId)} (${winId})` : (winId as any));
-    this.navigator = createNavigator(winId);
+  get body() {
+    return getEnv(this).$body$;
+  }
+
+  get document() {
+    return getEnv(this).$document$;
+  }
+
+  get documentElement() {
+    return getEnv(this).$documentElement$;
   }
 
   get frameElement() {
-    if (this[WinIdKey] === this[ParentWinIdKey]) {
+    const env = getEnv(this);
+    const parentWinId = env.$parentWinId$;
+    const winId = env.$winId$;
+
+    if (winId === parentWinId) {
+      // this is the top window, not in an iframe
       return null;
     }
 
     // the winId of an iframe's window is the same
     // as the instanceId of the containing iframe element
-    const env = getEnv(this);
-    const iframeElementWinId = env.$parentWinId$;
-    const iframeElementInstanceId = this[WinIdKey];
-    return getOrCreateNodeInstance(iframeElementWinId, iframeElementInstanceId, NodeName.IFrame);
+    return getOrCreateNodeInstance(parentWinId, winId, NodeName.IFrame);
+  }
+
+  get globalThis() {
+    return this;
+  }
+
+  get head() {
+    return getEnv(this).$head$;
   }
 
   get location() {
-    return this[LocationKey];
+    return getEnv(this).$location$;
   }
   set location(loc: any) {
-    this[LocationKey].href = loc + '';
+    getEnv(this).$location$.href = loc + '';
+  }
+
+  get Image() {
+    return createImageConstructor(this[WinIdKey]);
+  }
+
+  get name() {
+    const winId = this[WinIdKey];
+    return name + (debug ? `${normalizedWinId(winId)} (${winId})` : (winId as any));
+  }
+
+  get navigator() {
+    return createNavigator(this[WinIdKey]);
   }
 
   get origin() {
-    return this[LocationKey].origin;
+    return getEnv(this).$location$.origin;
   }
 
   get parent() {
-    return environments[this[ParentWinIdKey]].$window$;
+    return environments[getEnv(this).$parentWinId$].$window$;
+  }
+
+  get self() {
+    return this;
   }
 
   get top(): any {
@@ -93,11 +140,25 @@ export class Window extends WorkerProxy {
       }
     }
   }
+
+  get window() {
+    return this;
+  }
 }
 
-const patchWindow = (win: any) => {};
+export const patchWebWorkerWindowPrototype = () => {
+  // we already assigned the same prototypes found on the main thread's Window
+  // to the worker's Window, but actually it assigned a few that are already on
+  // the web worker's global we can use instead. So manually set which web worker
+  // globals we can reuse, instead of calling the main access.
+  // These same window properties will be assigned to the window instance
+  // when Window is constructed, and these won't make calls to the main thread.
+  const webWorkerGlobals =
+    'atob,btoa,crypto,indexedDB,navigator,performance,requestAnimationFrame'.split(',');
+  webWorkerGlobals.map((memberName) => delete (Window as any).prototype[memberName]);
+};
 
-const initWindowInstance = (win: any) => {
+const initWindowInstance2 = (win: any) => {
   // win[WinIdKey] = $winId$;
   // win[InstanceIdKey] = PlatformInstanceId.window;
   // win[ApplyPathKey] = [];

@@ -138,8 +138,9 @@ const logTargetProp = (target: any, accessType: 'Get' | 'Set' | 'Call', applyPat
   if (target) {
     const instanceId = target[InstanceIdKey];
     const cstrName = getConstructorName(target);
-
-    if (instanceId === PlatformInstanceId.document) {
+    if (instanceId === PlatformInstanceId.window) {
+      n = '';
+    } else if (instanceId === PlatformInstanceId.document) {
       n = 'document.';
     } else if (instanceId === PlatformInstanceId.documentElement) {
       n = 'document.documentElement.';

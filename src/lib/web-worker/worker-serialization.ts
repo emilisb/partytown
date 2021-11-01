@@ -64,7 +64,7 @@ export const serializeForMain = (
           {
             $winId$: value[WinIdKey],
             $instanceId$: value[InstanceIdKey],
-            $nodeName$: value[NodeNameKey],
+            // $nodeName$: value[NodeNameKey],
           },
         ];
       }

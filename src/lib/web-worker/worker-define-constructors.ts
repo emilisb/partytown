@@ -23,7 +23,7 @@ import { InterfaceInfo, InterfaceType } from '../types';
 import { HTMLCanvasDescriptorMap } from './worker-canvas';
 import { Node } from './worker-node';
 import { setInstanceStateValue } from './worker-state';
-import { Window } from './worker-window';
+import { patchWebWorkerWindowPrototype, Window } from './worker-window';
 import { WorkerProxy, WorkerTrapProxy } from './worker-proxy-constructor';
 
 export const defineWorkerInterface = (interfaceInfo: InterfaceInfo) => {
@@ -89,6 +89,8 @@ const TrapConstructors: { [cstrName: string]: 1 } = {
 };
 
 export const patchPrototypes = () => {
+  patchWebWorkerWindowPrototype();
+
   definePrototypePropertyDescriptor(self.Element, ElementDescriptorMap);
   definePrototypePropertyDescriptor(self.Document, DocumentDescriptorMap);
   definePrototypePropertyDescriptor(self.HTMLAnchorElement, HTMLAnchorDescriptorMap);

@@ -9,18 +9,7 @@ export const createEnvironment = ({ $winId$, $parentWinId$, $url$ }: InitializeE
     environments[$winId$].$location$.href = $url$;
   } else {
     // create a simulated global environment for this window
-    const $window$ = new Window($winId$, $parentWinId$, $url$);
-
-    environments[$winId$] = {
-      $winId$,
-      $parentWinId$,
-      $window$: $window$ as any,
-      $document$: $window$.document as any,
-      $documentElement$: $window$.documentElement as any,
-      $head$: $window$.head as any,
-      $body$: $window$.body as any,
-      $location$: $window$.location,
-    };
+    new Window($winId$, $parentWinId$, $url$);
 
     if (debug) {
       const winType = $winId$ === $parentWinId$ ? 'top' : 'iframe';
