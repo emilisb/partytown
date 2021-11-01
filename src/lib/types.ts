@@ -119,7 +119,6 @@ export interface WebWorkerEnvironment extends Omit<InitializeEnvironmentData, '$
   $head$: HTMLElement;
   $body$: HTMLElement;
   $location$: Location;
-  $run$: (content: string) => void;
   $currentScriptId$?: number;
   $currentScriptUrl$?: string;
   $isInitialized$?: number;

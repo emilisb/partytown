@@ -20,10 +20,6 @@ export const createEnvironment = ({ $winId$, $parentWinId$, $url$ }: InitializeE
       $head$: $window$.head as any,
       $body$: $window$.body as any,
       $location$: $window$.location,
-      $run$: (script: string) => {
-        const runInEnv = new Function(`with(this){${script}}`);
-        runInEnv.apply($window$);
-      },
     };
 
     if (debug) {
