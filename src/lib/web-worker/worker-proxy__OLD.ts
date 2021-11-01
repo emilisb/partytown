@@ -8,7 +8,7 @@
 // } from '../types';
 // import { cachedDimensions, InstanceIdKey, webWorkerCtx, WinIdKey } from './worker-constants';
 // import {
-//   debug,
+//     debug,
 //   defineConstructorName,
 //   getLastMemberName,
 //   len,
