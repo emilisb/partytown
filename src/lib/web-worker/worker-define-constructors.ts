@@ -1,20 +1,29 @@
-import { ApplyPathType, InterfaceInfo, InterfaceType } from '../types';
 import {
   ApplyPathKey,
+  cachedDimensions,
   cachedTree,
   InstanceIdKey,
   nodeConstructors,
   NodeNameKey,
+  webWorkerState,
   WinIdKey,
 } from './worker-constants';
-import { callMethod, getter, queue, setter } from './worker-proxy';
-import { defineConstructorName, logWorkerGlobalConstructor, randomId } from '../utils';
+import { callMethod, getter, setter } from './worker-proxy';
+import {
+  defineConstructorName,
+  definePrototypeProperty,
+  definePrototypePropertyDescriptor,
+  definePrototypeValue,
+  EMPTY_ARRAY,
+} from '../utils';
 import { DocumentDescriptorMap } from './worker-document';
 import { ElementDescriptorMap } from './worker-element';
 import { HTMLAnchorDescriptorMap } from './worker-anchor';
+import { InterfaceInfo, InterfaceType } from '../types';
 import { HTMLCanvasDescriptorMap } from './worker-canvas';
 import { Node } from './worker-node';
-import { serializeForMain } from './worker-serialization';
+import { setInstanceStateValue } from './worker-state';
+import { Window } from './worker-window';
 import { WorkerProxy, WorkerTrapProxy } from './worker-proxy-constructor';
 
 export const defineWorkerInterface = (interfaceInfo: InterfaceInfo) => {
@@ -22,7 +31,7 @@ export const defineWorkerInterface = (interfaceInfo: InterfaceInfo) => {
   const superCstrName = interfaceInfo[1];
   const members = interfaceInfo[2];
   const nodeName = interfaceInfo[3];
-  console.log(cstrName, 'extends', superCstrName, nodeName);
+
   const SuperCstr = TrapConstructors[cstrName]
     ? WorkerTrapProxy
     : superCstrName === 'Object'
@@ -30,7 +39,7 @@ export const defineWorkerInterface = (interfaceInfo: InterfaceInfo) => {
     : (self as any)[superCstrName];
 
   const Cstr = ((self as any)[cstrName] = defineConstructorName(
-    cstrName === 'Node' ? Node : class extends SuperCstr {},
+    cstrName === 'Node' ? Node : cstrName === 'Window' ? Window : class extends SuperCstr {},
     cstrName
   ));
 
@@ -39,7 +48,7 @@ export const defineWorkerInterface = (interfaceInfo: InterfaceInfo) => {
   }
 
   members.map(([memberName, memberType, staticValue]) => {
-    if (!(memberName in Cstr.prototype) && !(memberName in Node.prototype)) {
+    if (!(memberName in Cstr.prototype) && !(memberName in SuperCstr.prototype)) {
       // member not already in the constructor's prototype
       if (typeof memberType === 'string') {
         defineProxyProperty(Cstr, memberName, memberType);
@@ -100,11 +109,6 @@ const nodeTreePropNames =
 const elementTreePropNames =
   'childElementCount,children,firstElementChild,lastElementChild,nextElementSibling,previousElementSibling';
 
-const definePrototypeValue = (Cstr: any, memberName: string, value: any) =>
-  definePrototypeProperty(Cstr, memberName, {
-    value,
-  });
-
 const definePrototypeNodeType = (Cstr: any, nodeType: number) =>
   definePrototypeValue(Cstr, 'nodeType', nodeType);
 
@@ -120,12 +124,6 @@ const defineProxyProperty = (Cstr: WorkerProxy, memberName: string, proxiedCstrN
       return propInstance;
     },
   });
-
-const definePrototypeProperty = (Cstr: any, memberName: string, descriptor: PropertyDescriptor) =>
-  Object.defineProperty(Cstr.prototype, memberName, { ...descriptor, configurable: true });
-
-const definePrototypePropertyDescriptor = (Cstr: any, propertyDescriptorMap: any) =>
-  Object.defineProperties(Cstr.prototype, propertyDescriptorMap);
 
 const cachedTreeProps = (Cstr: any, treeProps: string) =>
   treeProps.split(',').map((propName) =>
@@ -145,26 +143,87 @@ const cachedTreeProps = (Cstr: any, treeProps: string) =>
 const getDimensionCacheKey = (instance: WorkerProxy, memberName: string) =>
   instance[WinIdKey] + '.' + instance[InstanceIdKey] + '.' + memberName;
 
-export const createGlobalConstructorProxy = (winId: number, cstrName: string) => {
-  const GlobalCstr = class {
-    constructor(...args: any[]) {
-      const instanceId = randomId();
-      const workerProxy = new WorkerProxy(winId, instanceId);
+/**
+ * Properties to add to the Constructor's prototype
+ * that should only do a main read once, cache the value, and
+ * returned the cached value after in subsequent reads after that
+ */
+export const cachedReadonlyProps = (Cstr: any, props: string) =>
+  props.split(',').map((propName) => {
+    definePrototypeProperty(Cstr, propName, {
+      get(this: WorkerProxy) {
+        let stateRecord = webWorkerState[this[InstanceIdKey]];
+        if (stateRecord && propName in stateRecord) {
+          return stateRecord[propName];
+        }
 
-      queue(workerProxy, [
-        ApplyPathType.GlobalConstructor,
-        cstrName,
-        serializeForMain(winId, instanceId, args),
-      ]);
+        let val = getter(this, [propName]);
+        setInstanceStateValue(this, propName, val);
+        return val;
+      },
+      set(this: WorkerProxy, val) {
+        setInstanceStateValue(this, propName, val);
+      },
+    });
+  });
 
-      logWorkerGlobalConstructor(winId, cstrName, args);
+/**
+ * Properties that always return a value, without doing a main access.
+ * Same as:
+ * get propName() { return propValue }
+ */
+export const constantProps = (Cstr: any, props: { [propName: string]: any }) =>
+  Object.keys(props).map((propName) => definePrototypeValue(Cstr, propName, props[propName]));
 
-      return workerProxy;
-    }
-  };
+const dimensionPropNames =
+  'innerHeight,innerWidth,outerHeight,outerWidth,clientHeight,clientWidth,clientTop,clientLeft,scrollHeight,scrollWidth,scrollTop,scrollLeft,offsetHeight,offsetWidth,offsetTop,offsetLeft'.split(
+    ','
+  );
 
-  return defineConstructorName(GlobalCstr, cstrName);
-};
+/**
+ * Known dimension properties to add to the Constructor's prototype
+ * that when called they'll check the dimension cache, and if it's
+ * not in the cache then to get all dimensions in one call and
+ * set its cache.
+ */
+const cachedDimensionProps = (Cstr: any) =>
+  dimensionPropNames.map((propName) => {
+    definePrototypeProperty(Cstr, propName, {
+      get(this: Node) {
+        const dimension = cachedDimensions.get(getDimensionCacheKey(this, propName));
+        if (typeof dimension === 'number') {
+          return dimension;
+        }
+
+        const groupedDimensions: { [key: string]: number } = getter(
+          this,
+          [propName],
+          dimensionPropNames
+        );
+
+        Object.entries(groupedDimensions).map(([dimensionPropName, value]) => {
+          cachedDimensions.set(getDimensionCacheKey(this, dimensionPropName), value);
+        });
+
+        return groupedDimensions[propName];
+      },
+    });
+  });
+
+const dimensionMethodNames = 'getClientRects,getBoundingClientRect'.split(',');
+
+const cachedDimensionMethods = (Cstr: any) =>
+  dimensionMethodNames.map((methodName) => {
+    Cstr.prototype[methodName] = function () {
+      let cacheKey = getDimensionCacheKey(this, methodName);
+      let dimensions = cachedDimensions.get(cacheKey);
+      if (!dimensions) {
+        dimensions = callMethod(this, [methodName], EMPTY_ARRAY);
+        cachedDimensions.set(cacheKey, dimensions);
+      }
+      return dimensions;
+    };
+  });
 
 const setterMethods =
   'addEventListener,removeEventListener,createElement,createTextNode,insertBefore,insertRule,deleteRule,setAttribute,setItem,removeItem,classList.add,classList.remove,classList.toggle'.split(

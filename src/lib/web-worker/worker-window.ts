@@ -1,11 +1,11 @@
-import { NodeName, PlatformInstanceId } from '../types';
-import { ApplyPathKey, environments, InstanceIdKey, WinIdKey } from './worker-constants';
-import { createNodeInstance, getOrCreateNodeInstance } from './worker-constructors';
-import { getEnv } from './worker-environment';
-import { createImageConstructor } from './worker-image';
-import { Location } from './worker-location';
 import { createNavigator } from './worker-navigator';
-import type { Node } from './worker-node';
+import { createImageConstructor } from './worker-image';
+import { createNodeInstance, getOrCreateNodeInstance } from './worker-constructors';
+import { debug, normalizedWinId } from '../utils';
+import { environments, WinIdKey } from './worker-constants';
+import { getEnv } from './worker-environment';
+import { Location } from './worker-location';
+import { NodeName, PlatformInstanceId } from '../types';
 import { WorkerProxy } from './worker-proxy-constructor';
 
 const LocationKey = Symbol();
@@ -22,6 +22,7 @@ export class Window extends WorkerProxy {
   documentElement: HTMLHtmlElement;
   globalThis: Window;
   head: HTMLHeadElement;
+  name: string;
   navigator: Navigator;
   self: Window;
   window: Window;
@@ -34,12 +35,15 @@ export class Window extends WorkerProxy {
       PlatformInstanceId.document,
       NodeName.Document
     ) as any;
+
     this.documentElement = createNodeInstance(
       winId,
       PlatformInstanceId.documentElement,
       NodeName.DocumentElement
     ) as any;
+
     this.head = createNodeInstance(winId, PlatformInstanceId.head, NodeName.Head) as any;
+
     this.body = createNodeInstance(winId, PlatformInstanceId.body, NodeName.Body) as any;
 
     this[LocationKey] = new Location(url);
@@ -50,7 +54,7 @@ export class Window extends WorkerProxy {
     this.Image = createImageConstructor(winId);
     this.Window = Window;
 
-    // win.name = name + (debug ? `${normalizedWinId($winId$)} (${$winId$})` : ($winId$ as any));
+    this.name = name + (debug ? `${normalizedWinId(winId)} (${winId})` : (winId as any));
     this.navigator = createNavigator(winId);
   }
 
@@ -90,6 +94,8 @@ export class Window extends WorkerProxy {
     }
   }
 }
+
+const patchWindow = (win: any) => {};
 
 const initWindowInstance = (win: any) => {
   // win[WinIdKey] = $winId$;

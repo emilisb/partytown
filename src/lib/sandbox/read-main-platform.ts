@@ -1,5 +1,5 @@
+import { debug, getConstructorName, isValidMemberName, logMain, noop } from '../utils';
 import { InterfaceType, InterfaceInfo, InterfaceMember, InitWebWorkerData } from '../types';
-import { debug, getConstructorName, isValidMemberName, logMain } from '../utils';
 
 export const readMainPlatform = (win: any) => {
   const doc = win.document;
@@ -29,6 +29,8 @@ const readMainInterfaces = (win: any, doc: Document) => {
   const svg = docImpl.createElementNS('http://www.w3.org/2000/svg', 'svg');
   const canvas = docImpl.createElement('canvas');
   const canvasRenderingContext2D = canvas.getContext('2d');
+  const mutationObserver = new MutationObserver(noop);
+  const resizeObserver = new ResizeObserver(noop);
 
   // get all HTML*Element constructors on window
   // and create each element to get their implementation
@@ -41,6 +43,13 @@ const readMainInterfaces = (win: any, doc: Document) => {
 
   const impls: any[] = [
     win,
+    win.localStorage,
+    win.history,
+    win.screen,
+
+    mutationObserver,
+    resizeObserver,
+
     textNode,
     comment,
     frag,

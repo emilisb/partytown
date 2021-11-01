@@ -1,5 +1,6 @@
 import { callMethod, getter } from './worker-proxy';
-import { constantProps, getInstanceStateValue, setInstanceStateValue } from './worker-state';
+import { constantProps } from './worker-define-constructors';
+import { getInstanceStateValue, setInstanceStateValue } from './worker-state';
 import type { Node } from './worker-node';
 import { StateProp } from '../types';
 

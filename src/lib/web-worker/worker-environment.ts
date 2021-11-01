@@ -1,6 +1,3 @@
-import { cachedDimensionProps, cachedReadonlyProps } from './worker-state';
-import { getter, setter } from './worker-proxy';
-import { createImageConstructor } from './worker-image';
 import { debug, logWorker, normalizedWinId } from '../utils';
 import { environments, webWorkerCtx, WinIdKey } from './worker-constants';
 import { InitializeEnvironmentData, WorkerMessageType } from '../types';

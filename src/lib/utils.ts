@@ -351,3 +351,17 @@ export const randomId = () => Math.round(Math.random() * 9999999999 + PlatformIn
 export const SCRIPT_TYPE = `text/partytown`;
 
 export const SCRIPT_TYPE_EXEC = `-x`;
+
+export const definePrototypeProperty = (
+  Cstr: any,
+  memberName: string,
+  descriptor: PropertyDescriptor
+) => Object.defineProperty(Cstr.prototype, memberName, { ...descriptor, configurable: true });
+
+export const definePrototypePropertyDescriptor = (Cstr: any, propertyDescriptorMap: any) =>
+  Object.defineProperties(Cstr.prototype, propertyDescriptorMap);
+
+export const definePrototypeValue = (Cstr: any, memberName: string, value: any) =>
+  definePrototypeProperty(Cstr, memberName, {
+    value,
+  });
