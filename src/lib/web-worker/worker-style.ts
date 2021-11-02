@@ -1,18 +1,17 @@
 import { callMethod, getter } from './worker-proxy';
-import { constantProps } from './worker-define-constructors';
 import { getInstanceStateValue, setInstanceStateValue } from './worker-state';
 import type { Node } from './worker-node';
 import { StateProp } from '../types';
 
-export const HTMLStyleElement: PropertyDescriptorMap & ThisType<Node> = {
+export const HTMLStyleDescriptorMap: PropertyDescriptorMap & ThisType<Node> = {
   sheet: {
     get() {
       return new CSSStyleSheet(this);
     },
   },
-};
+}
 
-class CSSStyleSheet {
+export class CSSStyleSheet {
   ownerNode: Node;
 
   constructor(ownerNode: Node) {
@@ -60,8 +59,6 @@ class CSSStyleSheet {
     cssRules.splice(index, 1);
   }
 }
-
-constantProps(CSSStyleSheet, { type: 'text/css' });
 
 const getCssRules = (ownerNode: Node): any[] => {
   let cssRules = getInstanceStateValue(ownerNode, StateProp.cssRules);

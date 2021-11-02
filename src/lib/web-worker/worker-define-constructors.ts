@@ -9,6 +9,7 @@ import {
   WinIdKey,
 } from './worker-constants';
 import { callMethod, getter, setter } from './worker-proxy';
+import { CSSStyleSheet, HTMLStyleDescriptorMap } from './worker-style';
 import {
   defineConstructorName,
   definePrototypeProperty,
@@ -38,8 +39,12 @@ export const defineWorkerInterface = (interfaceInfo: InterfaceInfo) => {
     ? WorkerProxy
     : (self as any)[superCstrName];
 
+  (self as any).Node = Node;
+  (self as any).Window = Window;
+  (self as any).CSSStyleSheet = CSSStyleSheet;
+
   const Cstr = ((self as any)[cstrName] = defineConstructorName(
-    cstrName === 'Node' ? Node : cstrName === 'Window' ? Window : class extends SuperCstr {},
+    (self as any)[cstrName] || class extends SuperCstr {},
     cstrName
   ));
 
@@ -95,6 +100,9 @@ export const patchPrototypes = () => {
   definePrototypePropertyDescriptor(self.Document, DocumentDescriptorMap);
   definePrototypePropertyDescriptor(self.HTMLAnchorElement, HTMLAnchorDescriptorMap);
   definePrototypePropertyDescriptor(self.HTMLCanvasElement, HTMLCanvasDescriptorMap);
+  definePrototypePropertyDescriptor(self.HTMLStyleElement, HTMLStyleDescriptorMap);
+
+  constantProps(CSSStyleSheet, { type: 'text/css' });
 
   definePrototypeNodeType(self.Comment, 8);
   definePrototypeNodeType(self.DocumentType, 10);
