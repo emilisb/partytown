@@ -1,8 +1,8 @@
 import { getUrl } from './worker-exec';
+import type { Node } from './worker-node';
 import { setInstanceStateValue } from './worker-state';
 import { setter } from './worker-proxy';
 import { StateProp } from '../types';
-import type { Node } from './worker-node';
 
 export const HTMLAnchorDescriptorMap: PropertyDescriptorMap & ThisType<Node> = {
   hash: {

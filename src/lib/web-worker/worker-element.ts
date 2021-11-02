@@ -12,11 +12,6 @@ export const ElementDescriptorMap: PropertyDescriptorMap & ThisType<Node> = {
       return 'http://www.w3.org/' + (this[NodeNameKey] === 'SVG' ? '2000/svg' : '1999/xhtml');
     },
   },
-  nodeName: {
-    get() {
-      return this[NodeNameKey];
-    },
-  },
   nodeType: {
     value: 1,
   },

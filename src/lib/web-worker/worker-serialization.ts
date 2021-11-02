@@ -8,19 +8,18 @@ import {
   SerializedTransfer,
   SerializedType,
 } from '../types';
+import { Attr } from './worker-node';
 import { callMethod } from './worker-proxy';
 import { constructEvent, getOrCreateNodeInstance } from './worker-constructors';
 import {
   environments,
   InstanceIdKey,
-  NodeNameKey,
   webWorkerRefIdsByRef,
   webWorkerRefsByRefId,
   WinIdKey,
 } from './worker-constants';
 import { NodeList } from './worker-node-list';
 import { setWorkerRef } from './worker-state';
-import { Attr } from './worker-node';
 
 export const serializeForMain = (
   $winId$: number,

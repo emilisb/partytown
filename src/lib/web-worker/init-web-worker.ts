@@ -1,6 +1,6 @@
+import { defineWorkerInterface, patchPrototypes } from './worker-define-constructors';
 import { EMPTY_ARRAY, logWorker } from '../utils';
 import type { InitWebWorkerData } from '../types';
-import { defineWorkerInterface, patchPrototypes } from './worker-define-constructors';
 import { webWorkerCtx } from './worker-constants';
 
 export const initWebWorker = (initWebWorkerData: InitWebWorkerData) => {
@@ -10,11 +10,6 @@ export const initWebWorker = (initWebWorkerData: InitWebWorkerData) => {
   webWorkerCtx.$forwardedTriggers$ = (webWorkerCtx.$config$.forward || EMPTY_ARRAY).map(
     (f) => f[0]
   );
-
-  // webWorkerCtx.$windowMembers$ = webWorkerCtx.$interfaces$[0][2];
-  // webWorkerCtx.$windowMemberNames$ = Object.keys(webWorkerCtx.$windowMembers$).filter(
-  //   (m) => !webWorkerCtx.$forwardedTriggers$.includes(m)
-  // );
 
   webWorkerCtx.$postMessage$ = postMessage.bind(self);
 
