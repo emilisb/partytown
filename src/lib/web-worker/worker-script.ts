@@ -1,6 +1,7 @@
 import { callMethod, getter, setter } from './worker-proxy';
 import { getEnv } from './worker-environment';
 import { getInstanceStateValue, setInstanceStateValue } from './worker-state';
+import { HTMLSrcElementDescriptorMap } from './worker-src-element';
 import type { Node } from './worker-node';
 import { resolveUrl } from './worker-exec';
 import { StateProp } from '../types';
@@ -14,7 +15,7 @@ const innerHTMLDescriptor: PropertyDescriptor & ThisType<Node> = {
   },
 };
 
-export const HTMLScriptElement: PropertyDescriptorMap & ThisType<Node> = {
+export const HTMLScriptDescriptorMap: PropertyDescriptorMap & ThisType<Node> = {
   innerHTML: innerHTMLDescriptor,
   innerText: innerHTMLDescriptor,
 
@@ -48,21 +49,6 @@ export const HTMLScriptElement: PropertyDescriptorMap & ThisType<Node> = {
     },
   },
 
-  // getAttribute(attrName: string) {
-  //   if (attrName === 'src') {
-  //     return this.src;
-  //   }
-  //   return callMethod(this, ['getAttribute'], [attrName]);
-  // }
-
-  // setAttribute(attrName: string, attrValue: any) {
-  //   if (attrName === 'src') {
-  //     this.src = attrValue;
-  //   } else {
-  //     callMethod(this, ['setAttribute'], [attrName, attrValue]);
-  //   }
-  // }
-
   textContent: innerHTMLDescriptor,
 
   type: {
@@ -75,4 +61,5 @@ export const HTMLScriptElement: PropertyDescriptorMap & ThisType<Node> = {
       }
     },
   },
+  ...HTMLSrcElementDescriptorMap
 };

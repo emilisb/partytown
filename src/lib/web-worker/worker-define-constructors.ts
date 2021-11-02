@@ -21,6 +21,7 @@ import { DocumentDescriptorMap } from './worker-document';
 import { ElementDescriptorMap } from './worker-element';
 import { HTMLAnchorDescriptorMap } from './worker-anchor';
 import { HTMLCanvasDescriptorMap } from './worker-canvas';
+import { HTMLScriptDescriptorMap } from './worker-script';
 import { InterfaceInfo, InterfaceType } from '../types';
 import { Node } from './worker-node';
 import { patchWebWorkerWindowPrototype, Window } from './worker-window';
@@ -100,6 +101,7 @@ export const patchPrototypes = () => {
   definePrototypePropertyDescriptor(self.Document, DocumentDescriptorMap);
   definePrototypePropertyDescriptor(self.HTMLAnchorElement, HTMLAnchorDescriptorMap);
   definePrototypePropertyDescriptor(self.HTMLCanvasElement, HTMLCanvasDescriptorMap);
+  definePrototypePropertyDescriptor(self.HTMLScriptElement, HTMLScriptDescriptorMap);
   definePrototypePropertyDescriptor(self.HTMLStyleElement, HTMLStyleDescriptorMap);
 
   constantProps(CSSStyleSheet, { type: 'text/css' });

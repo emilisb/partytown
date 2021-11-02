@@ -11,7 +11,7 @@ export const debug = (globalThis as any).partytownDebug;
 
 export const isPromise = (v: any): v is Promise<unknown> => typeof v === 'object' && v && v.then;
 
-export const noop = () => {};
+export const noop = () => true;
 
 export const logMain = (msg: string) => {
   if (debug) {

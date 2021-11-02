@@ -1,15 +1,23 @@
 import { EventHandler, StateProp } from '../types';
 import { getInstanceStateValue, setInstanceStateValue } from './worker-state';
-import { noop } from '../utils';
 import type { Node } from './worker-node';
+import { noop } from '../utils';
 
-export const HTMLSrcElementProperties: PropertyDescriptorMap & ThisType<Node> = {
+export const HTMLSrcElementDescriptorMap: PropertyDescriptorMap & ThisType<Node> = {
+  addEventListener: {
+    value(...args: any[]) {
+      const eventName = args[0];
+      const callbacks = getInstanceStateValue<EventHandler[]>(this, eventName) || [];
+      callbacks.push(args[1]);
+      setInstanceStateValue(this, eventName, callbacks);
+    }
+  },
   async: {
-    get: () => true,
+    get: noop,
     set: noop,
   },
   defer: {
-    get: () => true,
+    get: noop,
     set: noop,
   },
   onload: {
@@ -31,12 +39,4 @@ export const HTMLSrcElementProperties: PropertyDescriptorMap & ThisType<Node> = 
     },
   },
 };
-
-export const HTMLSrcElementMethods: ThisType<Node> = {
-  addEventListener(...args: any[]) {
-    const eventName = args[0];
-    const callbacks = getInstanceStateValue<EventHandler[]>(this, eventName) || [];
-    callbacks.push(args[1]);
-    setInstanceStateValue(this, eventName, callbacks);
-  },
-};
+ 

@@ -4,7 +4,7 @@ import { getOrCreateNodeInstance } from './worker-constructors';
 import { getPartytownScript } from './worker-exec';
 import { NodeName } from '../types';
 import type { Node } from './worker-node';
-import { randomId, SCRIPT_TYPE } from '../utils';
+import { noop, randomId, SCRIPT_TYPE } from '../utils';
 import { WinIdKey } from './worker-constants';
 
 export const DocumentDescriptorMap: PropertyDescriptorMap & ThisType<Node> = {
@@ -112,7 +112,7 @@ export const DocumentDescriptorMap: PropertyDescriptorMap & ThisType<Node> = {
 
   implementation: {
     value: {
-      hasFeature: () => true,
+      hasFeature: noop,
     },
   },
 
