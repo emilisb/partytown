@@ -35,7 +35,7 @@ export const defineWorkerInterface = (interfaceInfo: InterfaceInfo) => {
 
   const SuperCstr = TrapConstructors[cstrName]
     ? WorkerTrapProxy
-    : superCstrName === 'Object'
+    : superCstrName === 'Object' || superCstrName === 'EventTarget'
     ? WorkerProxy
     : (self as any)[superCstrName];
 
