@@ -8,12 +8,9 @@ export const readMainPlatform = (win: any) => {
 
   const initWebWorkerData: InitWebWorkerData = {
     $config$,
-    $libPath$: new URL($libPath$, win.location + '') + '',
+    $libPath$: new URL($libPath$, win.location) + '',
     $interfaces$: readMainInterfaces(win, doc),
   };
-
-  if (debug) {
-  }
 
   return initWebWorkerData;
 };
@@ -45,6 +42,7 @@ const readMainInterfaces = (win: any, doc: Document) => {
     win.localStorage,
     win.history,
     win.screen,
+    win.screen.orientation,
 
     mutationObserver,
     resizeObserver,
@@ -62,7 +60,7 @@ const readMainInterfaces = (win: any, doc: Document) => {
     docImpl.doctype!,
     canvasRenderingContext2D!,
     ...elms,
-  ].map((impl) => {
+  ].filter(impl => impl).map((impl) => {
     const cstrName = impl.constructor.name;
     const CstrPrototype = win[cstrName].prototype;
     return [cstrName, CstrPrototype, impl];

@@ -51,7 +51,6 @@ export class Window extends WorkerProxy {
     // window.Promise = self.Promise
     Object.getOwnPropertyNames(self).map((globalName) => {
       if (!(globalName in this)) {
-        console.log(globalName);
         (this as any)[globalName] = (self as any)[globalName];
       }
     });
