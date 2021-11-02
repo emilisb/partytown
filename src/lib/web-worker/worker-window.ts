@@ -1,7 +1,7 @@
 import { createNavigator } from './worker-navigator';
 import { createImageConstructor } from './worker-image';
 import { createNodeInstance, getOrCreateNodeInstance } from './worker-constructors';
-import { debug, definePrototypeValue, normalizedWinId } from '../utils';
+import { debug, normalizedWinId } from '../utils';
 import { environments, WinIdKey } from './worker-constants';
 import { getEnv } from './worker-environment';
 import { Location } from './worker-location';
@@ -11,39 +11,30 @@ import { WorkerProxy } from './worker-proxy-constructor';
 export class Window extends WorkerProxy {
   constructor($winId$: number, $parentWinId$: number, url: string) {
     super($winId$, PlatformInstanceId.window);
-
-    const $document$ = createNodeInstance(
-      $winId$,
-      PlatformInstanceId.document,
-      NodeName.Document
-    ) as any;
-
-    const $documentElement$ = createNodeInstance(
-      $winId$,
-      PlatformInstanceId.documentElement,
-      NodeName.DocumentElement
-    ) as any;
-
-    const $head$ = createNodeInstance($winId$, PlatformInstanceId.head, NodeName.Head) as any;
-
-    const $body$ = createNodeInstance($winId$, PlatformInstanceId.body, NodeName.Body) as any;
-
+ 
     environments[$winId$] = {
       $winId$,
       $parentWinId$,
       $window$: this as any,
-      $document$,
-      $documentElement$,
-      $head$,
-      $body$,
+      $document$: createNodeInstance(
+        $winId$,
+        PlatformInstanceId.document,
+        NodeName.Document
+      ) as any,
+      $documentElement$: createNodeInstance(
+        $winId$,
+        PlatformInstanceId.documentElement,
+        NodeName.DocumentElement
+      ) as any,
+      $head$: createNodeInstance($winId$, PlatformInstanceId.head, NodeName.Head) as any,
+      $body$: createNodeInstance($winId$, PlatformInstanceId.body, NodeName.Body) as any,
       $location$: new Location(url) as any,
     };
 
     // assign global properties already in the web worker global
     // that we can put onto the environment window
     for (const globalName in self) {
-      console.log(globalName);
-      if (!(globalName in this)) {
+      if (!(globalName in this) && globalName !== 'onmessage') {
         // global properties already in the web worker global
         const value = self[globalName] as any;
         if (value != null) {
@@ -157,7 +148,7 @@ export const patchWebWorkerWindowPrototype = () => {
     'atob,btoa,crypto,indexedDB,navigator,performance,requestAnimationFrame'.split(',');
   webWorkerGlobals.map((memberName) => delete (Window as any).prototype[memberName]);
 };
-
+ 
 const initWindowInstance2 = (win: any) => {
   // win[WinIdKey] = $winId$;
   // win[InstanceIdKey] = PlatformInstanceId.window;

@@ -19,11 +19,11 @@ import {
 import { DocumentDescriptorMap } from './worker-document';
 import { ElementDescriptorMap } from './worker-element';
 import { HTMLAnchorDescriptorMap } from './worker-anchor';
-import { InterfaceInfo, InterfaceType } from '../types';
 import { HTMLCanvasDescriptorMap } from './worker-canvas';
+import { InterfaceInfo, InterfaceType } from '../types';
 import { Node } from './worker-node';
-import { setInstanceStateValue } from './worker-state';
 import { patchWebWorkerWindowPrototype, Window } from './worker-window';
+import { setInstanceStateValue } from './worker-state';
 import { WorkerProxy, WorkerTrapProxy } from './worker-proxy-constructor';
 
 export const defineWorkerInterface = (interfaceInfo: InterfaceInfo) => {

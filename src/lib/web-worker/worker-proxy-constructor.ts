@@ -8,7 +8,7 @@ export class WorkerProxy {
   [ApplyPathKey]: string[];
   [NodeNameKey]: string | undefined;
 
-  constructor(winId?: number, instanceId?: number, applyPath?: ApplyPath, nodeName?: string) {
+  constructor(winId: number, instanceId: number, applyPath?: ApplyPath, nodeName?: string) {
     this[WinIdKey] = winId!;
     this[InstanceIdKey] = instanceId!;
     this[ApplyPathKey] = applyPath || [];
@@ -17,8 +17,9 @@ export class WorkerProxy {
 }
 
 export class WorkerTrapProxy extends WorkerProxy {
-  constructor(winId?: number, instanceId?: number, applyPath?: ApplyPath, nodeName?: string) {
+  constructor(winId: number, instanceId: number, applyPath?: ApplyPath, nodeName?: string) {
     super(winId, instanceId, applyPath, nodeName);
+    
     return new Proxy(this, {
       get(instance, propName) {
         return getter(instance, [propName]);

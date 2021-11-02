@@ -308,8 +308,6 @@ export const isValidMemberName = (memberName: string) => {
     startsWith(memberName, 'toString')
   ) {
     return false;
-  } else if (startsWith(memberName, 'on') && memberName.toLowerCase() === memberName) {
-    return false;
   } else {
     return true;
   }

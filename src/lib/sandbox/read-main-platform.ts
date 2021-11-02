@@ -68,18 +68,14 @@ const readMainInterfaces = (win: any, doc: Document) => {
     return [cstrName, CstrPrototype, impl];
   });
 
-  const interfaces: InterfaceInfo[] = [];
+  const interfaces: InterfaceInfo[] = [
+    readImplentation('Window', win),
+    readImplentation('Node', textNode)
+  ];
 
   impls.map(([cstrName, CstrPrototype, impl]) =>
-    readImplentation(interfaces, cstrName, CstrPrototype, impl)
+    readOwnImplentation(interfaces, cstrName, CstrPrototype, impl)
   );
-
-  const windowInterfaceMembers: InterfaceMember[] = [];
-  const windowInterface: InterfaceInfo = ['Window', 'EventTarget', windowInterfaceMembers];
-  for (const winMemberName in win) {
-    readImplentationMember(windowInterfaceMembers, win, winMemberName);
-  }
-  interfaces.push(windowInterface);
 
   if (debug) {
     logMain(
@@ -90,7 +86,16 @@ const readMainInterfaces = (win: any, doc: Document) => {
   return interfaces;
 };
 
-const readImplentation = (
+const readImplentation = ( cstrName: string, impl:any) => {
+  const interfaceMembers: InterfaceMember[] = [];
+  const interfaceInfo: InterfaceInfo = [cstrName, 'Object', interfaceMembers];
+  for (const memberName in impl) {
+    readImplentationMember(interfaceMembers, impl, memberName);
+  }
+  return interfaceInfo
+}
+
+const readOwnImplentation = (
   interfaces: InterfaceInfo[],
   cstrName: string,
   CstrPrototype: any,
@@ -101,7 +106,7 @@ const readImplentation = (
     const superCstrName = SuperCstr.constructor.name;
     const interfaceMembers: InterfaceMember[] = [];
 
-    readImplentation(interfaces, superCstrName, SuperCstr, impl);
+    readOwnImplentation(interfaces, superCstrName, SuperCstr, impl);
 
     Object.keys(Object.getOwnPropertyDescriptors(CstrPrototype)).map((memberName) =>
       readImplentationMember(interfaceMembers, impl, memberName)
@@ -119,7 +124,7 @@ const readImplentation = (
 };
 
 const readImplentationMember = (
-  members: InterfaceMember[],
+  interfaceMembers: InterfaceMember[],
   implementation: any,
   memberName: string
 ) => {
@@ -128,20 +133,20 @@ const readImplentationMember = (
     const memberType = typeof value;
 
     if (memberType === 'function') {
-      members.push([memberName, InterfaceType.Function]);
+      interfaceMembers.push([memberName, InterfaceType.Function]);
     } else if (memberType === 'object' && value != null) {
       if (value.nodeType) {
-        members.push([memberName, value.nodeType]);
+        interfaceMembers.push([memberName, value.nodeType]);
       } else {
-        members.push([memberName, getConstructorName(value)]);
+        interfaceMembers.push([memberName, getConstructorName(value)]);
       }
     } else if (memberType !== 'symbol') {
       // everything else that's not a symbol
       if (memberName.toUpperCase() === memberName) {
         // static property, let's get its value
-        members.push([memberName, InterfaceType.Property, value]);
+        interfaceMembers.push([memberName, InterfaceType.Property, value]);
       } else {
-        members.push([memberName, InterfaceType.Property]);
+        interfaceMembers.push([memberName, InterfaceType.Property]);
       }
     }
   }
