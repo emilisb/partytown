@@ -1,12 +1,13 @@
 import { environments, InstanceIdKey } from './worker-constants';
 import { getEnv } from './worker-environment';
 import { getInstanceStateValue, setInstanceStateValue } from './worker-state';
+import { HTMLSrcElementDescriptorMap } from './worker-src-element';
 import type { Node } from './worker-node';
 import { resolveUrl, updateIframeContent } from './worker-exec';
 import { setter } from './worker-proxy';
 import { StateProp } from '../types';
 
-export const HTMLIFrameElementProperties: PropertyDescriptorMap & ThisType<Node> = {
+export const HTMLIFrameDescriptorMap: PropertyDescriptorMap & ThisType<Node> = {
   contentDocument: {
     get() {
       return (this as any).contentWindow.document;
@@ -47,4 +48,6 @@ export const HTMLIFrameElementProperties: PropertyDescriptorMap & ThisType<Node>
       }
     },
   },
+
+  ...HTMLSrcElementDescriptorMap
 };

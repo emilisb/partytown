@@ -21,6 +21,7 @@ import { DocumentDescriptorMap } from './worker-document';
 import { ElementDescriptorMap } from './worker-element';
 import { HTMLAnchorDescriptorMap } from './worker-anchor';
 import { HTMLCanvasDescriptorMap } from './worker-canvas';
+import { HTMLIFrameDescriptorMap } from './worker-iframe';
 import { HTMLScriptDescriptorMap } from './worker-script';
 import { InterfaceInfo, InterfaceType } from '../types';
 import { Node } from './worker-node';
@@ -101,6 +102,7 @@ export const patchPrototypes = () => {
   definePrototypePropertyDescriptor(self.Document, DocumentDescriptorMap);
   definePrototypePropertyDescriptor(self.HTMLAnchorElement, HTMLAnchorDescriptorMap);
   definePrototypePropertyDescriptor(self.HTMLCanvasElement, HTMLCanvasDescriptorMap);
+  definePrototypePropertyDescriptor(self.HTMLIFrameElement, HTMLIFrameDescriptorMap);
   definePrototypePropertyDescriptor(self.HTMLScriptElement, HTMLScriptDescriptorMap);
   definePrototypePropertyDescriptor(self.HTMLStyleElement, HTMLStyleDescriptorMap);
 
