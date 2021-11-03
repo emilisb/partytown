@@ -11,25 +11,6 @@ import { WorkerProxy } from './worker-proxy-constructor';
 export class Window extends WorkerProxy {
   constructor($winId$: number, $parentWinId$: number, url: string) {
     super($winId$, PlatformInstanceId.window);
- 
-    environments[$winId$] = {
-      $winId$,
-      $parentWinId$,
-      $window$: this as any,
-      $document$: createNodeInstance(
-        $winId$,
-        PlatformInstanceId.document,
-        NodeName.Document
-      ) as any,
-      $documentElement$: createNodeInstance(
-        $winId$,
-        PlatformInstanceId.documentElement,
-        NodeName.DocumentElement
-      ) as any,
-      $head$: createNodeInstance($winId$, PlatformInstanceId.head, NodeName.Head) as any,
-      $body$: createNodeInstance($winId$, PlatformInstanceId.body, NodeName.Body) as any,
-      $location$: new Location(url) as any,
-    };
 
     // assign global properties already in the web worker global
     // that we can put onto the environment window
@@ -54,6 +35,36 @@ export class Window extends WorkerProxy {
         (this as any)[globalName] = (self as any)[globalName];
       }
     });
+
+    const win = new Proxy(this, {
+      has() {
+        // window "has" any and all props, this is especially true for global variables
+        // that are meant to be assigned to window, but without "window." prefix,
+        // like: <script>globalProp = true</script>
+        return true;
+      },
+    });
+
+    environments[$winId$] = {
+      $winId$,
+      $parentWinId$,
+      $window$: win as any,
+      $document$: createNodeInstance(
+        $winId$,
+        PlatformInstanceId.document,
+        NodeName.Document
+      ) as any,
+      $documentElement$: createNodeInstance(
+        $winId$,
+        PlatformInstanceId.documentElement,
+        NodeName.DocumentElement
+      ) as any,
+      $head$: createNodeInstance($winId$, PlatformInstanceId.head, NodeName.Head) as any,
+      $body$: createNodeInstance($winId$, PlatformInstanceId.body, NodeName.Body) as any,
+      $location$: new Location(url) as any,
+    };
+
+    return win;
   }
 
   get body() {
@@ -143,8 +154,8 @@ export const patchWebWorkerWindowPrototype = () => {
   // globals we can reuse, instead of calling the main access.
   // These same window properties will be assigned to the window instance
   // when Window is constructed, and these won't make calls to the main thread.
-  const webWorkerGlobals =
-    'atob,btoa,crypto,indexedDB,performance,requestAnimationFrame'.split(',');
+  const webWorkerGlobals = 'atob,btoa,crypto,indexedDB,performance,requestAnimationFrame'.split(
+    ','
+  );
   webWorkerGlobals.map((memberName) => delete (Window as any).prototype[memberName]);
 };
-  
