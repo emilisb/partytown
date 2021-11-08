@@ -22,7 +22,8 @@ export type MessageFromWorkerToSandbox =
   | [WorkerMessageType.MainDataRequestFromWorker]
   | [WorkerMessageType.InitializedWebWorker]
   | [WorkerMessageType.InitializedEnvironmentScript, WinId, number, string]
-  | [WorkerMessageType.InitializeNextScript, WinId];
+  | [WorkerMessageType.InitializeNextScript, WinId]
+  | [WorkerMessageType.StartedExternalWorker];
 
 export type MessageFromSandboxToWorker =
   | [WorkerMessageType.MainDataResponseToWorker, InitWebWorkerData]
@@ -30,18 +31,21 @@ export type MessageFromSandboxToWorker =
   | [WorkerMessageType.InitializedEnvironment, WinId]
   | [WorkerMessageType.InitializeNextScript, InitializeScriptData]
   | [WorkerMessageType.RefHandlerCallback, RefHandlerCallbackData]
-  | [WorkerMessageType.ForwardMainTrigger, ForwardMainTriggerData];
+  | [WorkerMessageType.ForwardMainTrigger, ForwardMainTriggerData]
+  | [WorkerMessageType.InitializedSandbox];
 
 export const enum WorkerMessageType {
-  MainDataRequestFromWorker,
-  MainDataResponseToWorker,
-  InitializedWebWorker,
-  InitializeEnvironment,
-  InitializedEnvironment,
-  InitializedEnvironmentScript,
-  InitializeNextScript,
-  RefHandlerCallback,
-  ForwardMainTrigger,
+  MainDataRequestFromWorker = 'pt-0',
+  MainDataResponseToWorker = 'pt-1',
+  InitializedWebWorker = 'pt-2',
+  InitializeEnvironment = 'pt-3',
+  InitializedEnvironment = 'pt-4',
+  InitializedEnvironmentScript = 'pt-5',
+  InitializeNextScript = 'pt-6',
+  RefHandlerCallback = 'pt-7',
+  ForwardMainTrigger = 'pt-8',
+  InitializedSandbox = 'pt-9',
+  StartedExternalWorker = 'pt-10',
 }
 
 export interface ForwardMainTriggerData {
@@ -344,6 +348,10 @@ export interface PartytownConfig {
    * Log stack traces (debug mode required)
    */
   logStackTraces?: boolean;
+  /**
+   * When set to `true`, Partytown will reuse an existing worker instead of creating a new one.
+   */
+  useExternalWorker?: boolean;
 }
 
 /**
@@ -391,6 +399,7 @@ export type PartytownForwardProperty = [
 
 export interface MainWindow extends Window {
   partytown?: PartytownConfig;
+  _ptWorker?: PartytownWebWorker;
   _ptf?: any[];
 }
 

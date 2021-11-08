@@ -29,6 +29,22 @@ const receiveMessageFromSandboxToWorker = (ev: MessageEvent<MessageFromSandboxTo
       workerForwardedTriggerHandle(msg[1] as ForwardMainTriggerData);
     } else if (msgType === WorkerMessageType.InitializeEnvironment) {
       createEnvironment(msg[1]);
+
+      if (webWorkerCtx.$config$.useExternalWorker) {
+        const { $winId$ } = msg[1];
+
+        const windowDescriptors = Object.getOwnPropertyDescriptors(
+          Object.getPrototypeOf(environments[$winId$].$window$)
+        );
+
+        Object.entries(windowDescriptors).forEach(([key, _property]) => {
+          const skipProperties = ['constructor'];
+
+          if (!skipProperties.includes(key)) {
+            (self as any)[key] = (environments[$winId$].$window$ as any)[key];
+          }
+        });
+      }
     } else if (msgType === WorkerMessageType.InitializedEnvironment) {
       environments[msg[1]].$isInitialized$ = 1;
 

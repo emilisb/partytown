@@ -27,6 +27,8 @@ export const onMessageFromWebWorker = (
   } else if (msgType === WorkerMessageType.InitializedWebWorker) {
     // web worker has finished initializing and ready to run scripts
     registerWindow(worker, randomId(), mainWindow, 1);
+  } else if (msgType === WorkerMessageType.StartedExternalWorker) {
+    worker.postMessage([WorkerMessageType.InitializedSandbox]);
   } else {
     const winCtx = winCtxs[msg[1]]!;
     if (winCtx) {

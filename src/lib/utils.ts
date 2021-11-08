@@ -319,6 +319,7 @@ if (debug) {
 
 export const PT_INITIALIZED_EVENT = `pt0`;
 export const PT_IFRAME_APPENDED = `pt1`;
+export const PT_EXTERNAL_WORKER_SET = `pt2`;
 
 export const randomId = () => Math.round(Math.random() * 9999999999 + PlatformInstanceId.body);
 
