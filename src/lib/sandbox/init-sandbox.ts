@@ -11,7 +11,6 @@ import {
 import { onMessageFromWebWorker } from './on-messenge-from-worker';
 import { registerWindow } from './main-register-window';
 import syncCreateMessenger from '@sync-create-messenger';
-import WebWorkerBlob from '@web-worker-blob';
 import WebWorkerUrl from '@web-worker-url';
 
 export const initSandbox = async (sandboxWindow: any) => {
@@ -72,16 +71,7 @@ const createWebWorker = async (
 };
 
 const createNewWebWorker = (): PartytownWebWorker => {
-  return new Worker(
-    debug
-      ? WebWorkerUrl
-      : URL.createObjectURL(
-          new Blob([WebWorkerBlob], {
-            type: 'text/javascript',
-          })
-        ),
-    { name: `Partytown 🎉` }
-  );
+  return new Worker(WebWorkerUrl, { name: `Partytown 🎉` });
 };
 
 const getExternalWebWorker = async (mainWindow: MainWindow): Promise<PartytownWebWorker> => {
