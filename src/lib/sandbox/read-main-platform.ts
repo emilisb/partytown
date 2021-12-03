@@ -61,7 +61,7 @@ export const readMainPlatform = (win: any) => {
     .map((implData) => {
       const impl = implData[0];
       const interfaceType: InterfaceType = implData[1];
-      const cstrName: string = impl.constructor.name;
+      const cstrName: string = impl.constructor.name || 'HTMLElement'; // Workaround for santa-core custom element native shim
       const CstrPrototype = win[cstrName].prototype;
       return [cstrName, CstrPrototype, impl, interfaceType];
     });
