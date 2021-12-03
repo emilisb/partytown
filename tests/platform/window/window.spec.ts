@@ -28,6 +28,8 @@ test('window', async ({ page }) => {
 
   await page.waitForSelector('.testRaf');
 
+  await page.waitForSelector('.testWindowRaf');
+
   const testBtoa = page.locator('#testBtoa');
   await expect(testBtoa).toHaveText('ODg=');
   const testAtob = page.locator('#testAtob');
@@ -38,12 +40,6 @@ test('window', async ({ page }) => {
   await promptButton.click();
   const testPrompt = page.locator('#testPrompt');
   await expect(testPrompt).toHaveText('88');
-
-  const wwHTMLConstructors = page.locator('#wwHTMLConstructors');
-  const ww = await wwHTMLConstructors.innerText();
-  const mainHTMLConstructors = page.locator('#mainHTMLConstructors');
-  const main = await mainHTMLConstructors.innerText();
-  expect(ww).toBe(main);
 
   const testPostMessage = page.locator('#testPostMessage');
   await page.waitForSelector('.testPostMessage');
@@ -94,4 +90,10 @@ test('window', async ({ page }) => {
 
   const testIndexedDB = page.locator('#testIndexedDB');
   await expect(testIndexedDB).toHaveText('true');
+
+  const testFnNotNative = page.locator('#testFnNotNative');
+  await expect(testFnNotNative).toHaveText('undefined');
+
+  const testNotStandard = page.locator('#testNotStandard');
+  await expect(testNotStandard).toHaveText('undefined');
 });

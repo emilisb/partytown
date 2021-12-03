@@ -1,7 +1,6 @@
-import { getConstructorName, isValidMemberName } from '../utils';
+import { getConstructorName, isValidMemberName, startsWith } from '../utils';
 import { getInstance, getAndSetInstanceId } from './main-instances';
 import {
-  InterfaceType,
   PartytownWebWorker,
   PlatformInstanceId,
   RefHandlerCallbackData,
@@ -43,26 +42,13 @@ export const serializeForWorker = (
     }
 
     if (type === 'object') {
-      if (value.nodeType) {
-        return [
-          SerializedType.Instance,
-          {
-            $winId$,
-            $interfaceType$: value.nodeType,
-            $instanceId$: getAndSetInstanceId(value),
-            $parentInstanceId$: getAndSetInstanceId(value.parentNode),
-            $nodeName$: value.nodeName,
-          },
-        ];
-      }
-
       cstrName = getConstructorName(value);
+
       if (cstrName === 'Window') {
         return [
           SerializedType.Instance,
           {
             $winId$,
-            $interfaceType$: InterfaceType.Window,
             $instanceId$: PlatformInstanceId.window,
           },
         ];
@@ -83,12 +69,27 @@ export const serializeForWorker = (
         return [SerializedType.CSSRuleList, Array.from(value).map(serializeCssRuleForWorker)];
       }
 
-      if (cstrName.startsWith('CSS') && cstrName.endsWith('Rule')) {
+      if (startsWith(cstrName, 'CSS') && cstrName.endsWith('Rule')) {
         return [SerializedType.CSSRule, serializeCssRuleForWorker(value)];
       }
 
       if (cstrName === 'CSSStyleDeclaration') {
         return [SerializedType.Object, serializeObjectForWorker($winId$, value, added)];
+      }
+
+      if (cstrName === 'Attr') {
+        return [SerializedType.Attr, [(value as Attr).name, (value as Attr).value]];
+      }
+
+      if (value.nodeType) {
+        return [
+          SerializedType.Instance,
+          {
+            $winId$,
+            $instanceId$: getAndSetInstanceId(value),
+            $nodeName$: value.nodeName,
+          },
+        ];
       }
 
       return [SerializedType.Object, serializeObjectForWorker($winId$, value, added, true, true)];

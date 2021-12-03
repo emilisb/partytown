@@ -8,7 +8,6 @@ import {
   PartytownWebWorker,
   WorkerMessageType,
 } from '../types';
-import { onMessageFromWebWorker } from './on-messenge-from-worker';
 import { registerWindow } from './main-register-window';
 import syncCreateMessenger from '@sync-create-messenger';
 import WebWorkerUrl from '@web-worker-url';
@@ -19,11 +18,16 @@ export const initSandbox = async (sandboxWindow: any) => {
   const mainWindow: MainWindow = sandboxWindow.parent;
   const useExternalWorker = mainWindow.partytown?.useExternalWorker ?? false;
 
+  const receiveMessage: MessengerRequestCallback = (accessReq, responseCallback) =>
+    mainAccessHandler(worker, accessReq).then(responseCallback);
+
+  const onMessageHandler = await syncCreateMessenger(sandboxWindow, receiveMessage);
+
   const initWorker = async () => {
     const newWorker = await createWebWorker(mainWindow, useExternalWorker);
 
     newWorker.onmessage = (ev: MessageEvent<MessageFromWorkerToSandbox>) =>
-      onMessageFromWebWorker(newWorker, mainWindow, ev.data);
+      onMessageHandler(newWorker, mainWindow, ev.data);
 
     if (debug) {
       logMain(`Created web worker`);
@@ -43,12 +47,7 @@ export const initSandbox = async (sandboxWindow: any) => {
     });
   }
 
-  const receiveMessage: MessengerRequestCallback = (accessReq, responseCallback) =>
-    mainAccessHandler(worker, accessReq).then(responseCallback);
-
-  const success = await syncCreateMessenger(sandboxWindow, receiveMessage);
-
-  if (success) {
+  if (onMessageHandler) {
     worker = await initWorker();
 
     mainWindow.addEventListener<any>(PT_IFRAME_APPENDED, (ev: CustomEvent) => {

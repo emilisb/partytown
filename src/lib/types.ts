@@ -1,17 +1,19 @@
-import type { HTMLDocument } from './web-worker/worker-document';
-import type { HTMLElement } from './web-worker/worker-element';
-import type { Location } from './web-worker/worker-location';
-
 export type CreateWorker = (workerName: string) => Worker;
 
 export type Messenger = (
   sandboxWindow: Window,
   receiveMessage: MessengerRequestCallback
-) => Promise<boolean>;
+) => Promise<MessengerHandler | null>;
 
 export type MessengerRequestCallback = (
   accessReq: MainAccessRequest,
   responseCallback: MessengerResponseCallback
+) => void;
+
+export type MessengerHandler = (
+  worker: PartytownWebWorker,
+  mainWindow: MainWindow,
+  msg: MessageFromWorkerToSandbox
 ) => void;
 
 export type MessengerResponseCallback = (accessRsp: MainAccessResponse) => void;
@@ -23,7 +25,8 @@ export type MessageFromWorkerToSandbox =
   | [WorkerMessageType.InitializedWebWorker]
   | [WorkerMessageType.InitializedEnvironmentScript, WinId, number, string]
   | [WorkerMessageType.InitializeNextScript, WinId]
-  | [WorkerMessageType.StartedExternalWorker];
+  | [WorkerMessageType.StartedExternalWorker]
+  | [WorkerMessageType.ForwardWorkerAccessRequest, MainAccessRequest];
 
 export type MessageFromSandboxToWorker =
   | [WorkerMessageType.MainDataResponseToWorker, InitWebWorkerData]
@@ -44,8 +47,9 @@ export const enum WorkerMessageType {
   InitializeNextScript = 'pt-6',
   RefHandlerCallback = 'pt-7',
   ForwardMainTrigger = 'pt-8',
-  InitializedSandbox = 'pt-9',
-  StartedExternalWorker = 'pt-10',
+  ForwardWorkerAccessRequest = 'pt-9',
+  InitializedSandbox = 'pt-10',
+  StartedExternalWorker = 'pt-11',
 }
 
 export interface ForwardMainTriggerData {
@@ -78,10 +82,31 @@ export interface PartytownWebWorker extends Worker {
 
 export interface InitWebWorkerData {
   $config$: PartytownConfig;
-  $htmlConstructors$: string[];
   $interfaces$: InterfaceInfo[];
   $libPath$: string;
+  $sharedDataBuffer$?: SharedArrayBuffer;
 }
+
+/**
+ * [0] Constructor name
+ * [1] Prototype parent construtor name
+ * [2] InterfaceMember[]
+ * [3]? Node Name
+ */
+export type InterfaceInfo =
+  | [string, string, InterfaceMember[], InterfaceType, string]
+  | [string, string, InterfaceMember[]];
+
+/**
+ * [0] Member name
+ * [1] Constructor name or interface type
+ * [2]? If there's a value it's a static prop
+ */
+export type InterfaceMember =
+  | [string, string]
+  | [string, InterfaceType.Function]
+  | [string, InterfaceType.Property]
+  | [string, InterfaceType.Property, string | number | boolean];
 
 export interface InitWebWorkerContext {
   $isInitialized$?: number;
@@ -90,6 +115,7 @@ export interface InitWebWorkerContext {
 
 export interface WebWorkerContext extends InitWebWorkerData, InitWebWorkerContext {
   $forwardedTriggers$: string[];
+  $htmlConstructors$: InterfaceInfo[];
   $windowMembers$: MembersInterfaceTypeInfo;
   $windowMemberNames$: string[];
   lastLog?: string;
@@ -98,20 +124,17 @@ export interface WebWorkerContext extends InitWebWorkerData, InitWebWorkerContex
 export interface InitializeEnvironmentData {
   $winId$: number;
   $parentWinId$: number;
-  $isTop$?: number;
   $url$: string;
 }
 
 export interface WebWorkerEnvironment extends Omit<InitializeEnvironmentData, '$url$'> {
   $window$: Window;
-  $document$: HTMLDocument;
+  $document$: Document;
   $documentElement$: HTMLElement;
   $head$: HTMLElement;
   $body$: HTMLElement;
   $location$: Location;
-  $run$: (content: string) => void;
   $currentScriptId$?: number;
-  $currentScriptUrl$?: string;
   $isInitialized$?: number;
 }
 
@@ -120,8 +143,6 @@ export interface WebWorkerGlobal {
   $interfaceType$: InterfaceType;
   $implementation$: any;
 }
-
-export type InterfaceInfo = [InterfaceType, string, MembersInterfaceTypeInfo];
 
 export interface MembersInterfaceTypeInfo {
   [memberName: string]: InterfaceType;
@@ -136,6 +157,11 @@ export const enum InterfaceType {
   AttributeNode = 2,
   TextNode = 3,
   CDataSectionNode = 4,
+
+  // NodeType 5 and 6 not used in the standards
+  Function = 5,
+  Property = 6,
+
   ProcessingInstructionNode = 7,
   CommentNode = 8,
   Document = 9,
@@ -143,24 +169,11 @@ export const enum InterfaceType {
   DocumentFragmentNode = 11,
 
   // Global Constructors and window function implementations
-  Property = 12,
-  Function = 13,
-  CanvasRenderingContext2D = 14,
-  CSSStyleDeclaration = 15,
-  DOMStringMap = 16,
-  DOMTokenList = 17,
-  History = 18,
-  Location = 19,
-  MutationObserver = 20,
-  NamedNodeMap = 21,
-  ResizeObserver = 22,
-  Screen = 23,
-  Storage = 24,
+  EnvGlobalConstructor = 12,
 }
 
 export const enum PlatformInstanceId {
   window,
-  screen,
   document,
   documentElement,
   head,
@@ -203,6 +216,7 @@ export type ApplyPath = any[];
 
 export const enum SerializedType {
   Array,
+  Attr,
   CSSRule,
   CSSRuleList,
   Event,
@@ -215,6 +229,8 @@ export const enum SerializedType {
 }
 
 export type SerializedArrayTransfer = [SerializedType.Array, (SerializedTransfer | undefined)[]];
+
+export type SerializedAttrTransfer = [SerializedType.Attr, SerializedAttr];
 
 export type SerializedCSSRuleTransfer = [SerializedType.CSSRule, SerializedCSSRule];
 
@@ -236,6 +252,8 @@ export type SerializedObjectTransfer = [
   { [key: string]: SerializedTransfer | undefined }
 ];
 
+export type SerializedAttr = [string, string];
+
 export type SerializedCSSRule = { [key: string]: string };
 
 export type SerializedPrimitiveTransfer =
@@ -247,11 +265,13 @@ export type SerializedRefTransfer = [SerializedType.Ref, SerializedRefTransferDa
 export interface SerializedRefTransferData {
   $winId$: number;
   $instanceId$: number;
+  $nodeName$?: string;
   $refId$: number;
 }
 
 export type SerializedTransfer =
   | SerializedArrayTransfer
+  | SerializedAttrTransfer
   | SerializedCSSRuleTransfer
   | SerializedCSSRuleListTransfer
   | SerializedEventTransfer
@@ -270,12 +290,7 @@ export interface SerializedObject {
 
 export interface SerializedInstance {
   $winId$: number;
-  $instanceId$?: number;
-  $parentInstanceId$?: number;
-  /**
-   * Node Type for Element (1), Text (3) and Document (9)
-   */
-  $interfaceType$: InterfaceType;
+  $instanceId$: number;
   /**
    * Node name for Node instances
    */
@@ -290,6 +305,15 @@ export interface SerializedInstance {
  * @public
  */
 export interface PartytownConfig {
+  /**
+   * The `resolveUrl()` hook can be used to modify the URL about to be
+   * requested, which could be used to rewrite urls so they go through a proxy.
+   *
+   * @param url - The URL to be resolved. This is a URL https://developer.mozilla.org/en-US/docs/Web/API/URL, not a string.
+   * @param location - The current window location.
+   * @returns The returned value must be a URL interface, otherwise the default resolved URL is used.
+   */
+  resolveUrl?(url: URL, location: Location): URL | undefined | null;
   /**
    * When set to `true`, Partytown scripts are not inlined and not minified.
    */
@@ -311,9 +335,11 @@ export interface PartytownConfig {
    */
   forward?: PartytownForwardProperty[];
   /**
-   * Root directory the Partytown library files can be found.
-   * The library path must end with a `/`.
+   * An absolute path to the root directory which Partytown library files
+   * can be found. The library path must start and end with a `/`.
    * By default the files will load from the server's `/~partytown/` directory.
+   * Note that the library path must be on the same origin as the html document,
+   * and is also used as the `scope` of the Partytown service worker.
    */
   lib?: string;
   /**

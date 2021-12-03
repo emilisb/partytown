@@ -22,6 +22,7 @@ export interface PartytownConfig {
     logSetters?: boolean;
     logStackTraces?: boolean;
     useExternalWorker?: boolean;
+    resolveUrl?(url: URL, location: Location): URL | undefined | null;
 }
 
 // @public

@@ -1,6 +1,6 @@
 import gzipSize from 'gzip-size';
-import { basename, join } from 'path';
-import { copy, readdirSync, readFileSync, readJson, statSync, writeJson } from 'fs-extra';
+import { basename, relative, resolve, join } from 'path';
+import { copyFile, readdirSync, readFileSync, readJson, statSync, writeJson } from 'fs-extra';
 import type { Plugin, RollupWarning } from 'rollup';
 
 export function syncCommunicationModulesPlugin(opts: BuildOptions, msgType: MessageType): Plugin {
@@ -85,15 +85,6 @@ export function submodulePackageJson(
   };
 }
 
-export function copyBuildToTestSite(opts: BuildOptions): Plugin {
-  return {
-    name: 'copyBuildToTestSite',
-    async writeBundle() {
-      await copy(opts.distLibDir, opts.distTestsDir);
-    },
-  };
-}
-
 export function watchDir(opts: BuildOptions, dir: string): Plugin {
   return {
     name: 'watchDir',
@@ -113,6 +104,18 @@ export function watchDir(opts: BuildOptions, dir: string): Plugin {
   };
 }
 
+export function copyOutputToTests(opts: BuildOptions): Plugin {
+  return {
+    name: 'copyOutputToTests',
+    async writeBundle(writeOpts) {
+      const src = writeOpts.file!;
+      const rel = relative(opts.distLibDir, writeOpts.file!);
+      const dest = resolve(opts.distTestsLibDir, rel);
+      await copyFile(src, dest);
+    },
+  };
+}
+
 export function onwarn(warning: RollupWarning) {
   if (warning.code === 'CIRCULAR_DEPENDENCY') return;
   console.log(warning.code);
@@ -125,18 +128,22 @@ export interface BuildOptions {
   distIntegrationDir: string;
   distLibDir: string;
   distLibDebugDir: string;
+  distTestsLibDir: string;
+  distTestsLibDebugDir: string;
   distReactDir: string;
-  distTestsDir: string;
+  distUtilsDir: string;
   srcDir: string;
   srcIntegrationDir: string;
   srcLibDir: string;
   srcReactDir: string;
+  srcUtilsDir: string;
   testsDir: string;
   testsVideosDir: string;
   tscDir: string;
   tscIntegrationDir: string;
   tscLibDir: string;
   tscReactDir: string;
+  tscUtilsDir: string;
   packageJson: any;
 }
 

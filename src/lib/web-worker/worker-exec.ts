@@ -1,21 +1,22 @@
-import { debug, logWorker, nextTick, SCRIPT_TYPE, SCRIPT_TYPE_EXEC } from '../utils';
+import { debug, logWorker, nextTick, SCRIPT_TYPE } from '../utils';
 import {
   EventHandler,
   InitializeScriptData,
-  WebWorkerEnvironment,
+  NodeName,
   StateProp,
+  WebWorkerEnvironment,
   WorkerMessageType,
 } from '../types';
-import { environments, InstanceIdKey, webWorkerCtx, WinIdKey } from './worker-constants';
+import { environments, InstanceIdKey, webWorkerCtx } from './worker-constants';
 import { getEnv } from './worker-environment';
-import { getInstanceStateValue, getStateValue, setStateValue } from './worker-state';
-import type { Location } from './worker-location';
-import type { Node } from './worker-node';
+import { getOrCreateNodeInstance } from './worker-constructors';
+import { getInstanceStateValue, setInstanceStateValue } from './worker-state';
 import type { WorkerProxy } from './worker-proxy-constructor';
 
 export const initNextScriptsInWebWorker = async (initScript: InitializeScriptData) => {
   let winId = initScript.$winId$;
   let instanceId = initScript.$instanceId$;
+  let instance = getOrCreateNodeInstance(winId, instanceId, NodeName.Script);
   let scriptContent = initScript.$content$;
   let scriptSrc = initScript.$url$;
   let errorMsg = '';
@@ -27,21 +28,10 @@ export const initNextScriptsInWebWorker = async (initScript: InitializeScriptDat
     try {
       scriptUrl = resolveToUrl(env, scriptSrc);
       scriptSrc = scriptUrl + '';
-      setStateValue(instanceId, StateProp.url, scriptSrc);
+      setInstanceStateValue(instance!, StateProp.url, scriptSrc);
 
       if (debug && webWorkerCtx.$config$.logScriptExecution) {
         logWorker(`Execute script (${instanceId}) src: ${scriptSrc}`, winId);
-      }
-
-      try {
-        rsp = await self.fetch(scriptSrc);
-      } catch (e) {
-        if (scriptUrl.origin !== origin) {
-          scriptSrc = 'https://partytown.builder.io/api/proxy?p=' + scriptSrc;
-          logWorker(`Proxied script (${instanceId}) src: ${scriptSrc}`, winId);
-        } else {
-          throw e;
-        }
       }
 
       rsp = await self.fetch(scriptSrc);
@@ -49,25 +39,23 @@ export const initNextScriptsInWebWorker = async (initScript: InitializeScriptDat
         scriptContent = await rsp.text();
 
         env.$currentScriptId$ = instanceId;
-        env.$currentScriptUrl$ = scriptSrc;
-        env.$run$(scriptContent);
-        runStateLoadHandlers(instanceId, StateProp.loadHandlers);
+        run(env, scriptContent);
+        runStateLoadHandlers(instance!, StateProp.loadHandlers);
       } else {
         console.error(rsp.status, 'url:', scriptSrc);
         errorMsg = rsp.statusText;
-        runStateLoadHandlers(instanceId, StateProp.errorHandlers);
+        runStateLoadHandlers(instance!, StateProp.errorHandlers);
       }
     } catch (urlError: any) {
       console.error('url:', scriptSrc, urlError);
       errorMsg = String(urlError.stack || urlError) + '';
-      runStateLoadHandlers(instanceId, StateProp.errorHandlers);
+      runStateLoadHandlers(instance!, StateProp.errorHandlers);
     }
   } else if (scriptContent) {
     errorMsg = runScriptContent(env, instanceId, scriptContent, winId);
   }
 
   env.$currentScriptId$ = -1;
-  env.$currentScriptUrl$ = '';
 
   webWorkerCtx.$postMessage$([
     WorkerMessageType.InitializedEnvironmentScript,
@@ -99,27 +87,34 @@ export const runScriptContent = (
     }
 
     env.$currentScriptId$ = instanceId;
-    env.$currentScriptUrl$ = '';
-    env.$run$(scriptContent);
+    run(env, scriptContent);
   } catch (contentError: any) {
     console.error(scriptContent, contentError);
     errorMsg = String(contentError.stack || contentError) + '';
   }
 
   env.$currentScriptId$ = -1;
-  env.$currentScriptUrl$ = '';
 
   return errorMsg;
 };
 
-const runStateLoadHandlers = (instanceId: number, type: StateProp, handlers?: EventHandler[]) => {
-  handlers = getStateValue(instanceId, type);
+const run = (env: WebWorkerEnvironment, script: string) => {
+  const runInEnv = new Function(`with(this){${script}}`);
+  runInEnv.apply(env.$window$);
+};
+
+const runStateLoadHandlers = (
+  instance: WorkerProxy,
+  type: StateProp,
+  handlers?: EventHandler[]
+) => {
+  handlers = getInstanceStateValue(instance, type);
   if (handlers) {
     nextTick(() => handlers!.map((cb) => cb({ type })));
   }
 };
 
-export const insertIframe = (iframe: Node) => {
+export const insertIframe = (iframe: WorkerProxy) => {
   // an iframe element's instanceId is also
   // the winId of it's contentWindow
   let i = 0;
@@ -154,14 +149,22 @@ const resolveToUrl = (env: WebWorkerEnvironment, url?: string, baseLocation?: Lo
   while (!baseLocation.host) {
     env = environments[env.$parentWinId$];
     baseLocation = env.$location$;
-    if (env.$isTop$) {
+    if (env.$winId$ === env.$parentWinId$) {
       break;
     }
   }
-  return new URL(url || '', baseLocation);
+
+  const resolvedUrl = new URL(url || '', baseLocation as any);
+  if (webWorkerCtx.$config$.resolveUrl) {
+    const configResolvedUrl = webWorkerCtx.$config$.resolveUrl!(resolvedUrl, baseLocation);
+    if (configResolvedUrl) {
+      return configResolvedUrl;
+    }
+  }
+  return resolvedUrl;
 };
 
-export const resolveUrl = (env: WebWorkerEnvironment, url?: string) => resolveToUrl(env, url) + '';
+export const resolveUrl = (env: WebWorkerEnvironment, url: string) => resolveToUrl(env, url) + '';
 
 export const getUrl = (elm: WorkerProxy) =>
   resolveToUrl(getEnv(elm), getInstanceStateValue(elm, StateProp.url));

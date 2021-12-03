@@ -1,7 +1,7 @@
 import type { RollupOptions } from 'rollup';
 import {
   BuildOptions,
-  copyBuildToTestSite,
+  copyOutputToTests,
   fileSize,
   syncCommunicationModulesPlugin,
   watchDir,
@@ -14,8 +14,8 @@ import { webWorkerBlobUrlPlugin } from './build-web-worker';
 export function buildAtomics(opts: BuildOptions): RollupOptions[] {
   const rollups: RollupOptions[] = [];
 
+  rollups.push(buildAtomicsDebug(opts));
   if (!opts.isDev) {
-    rollups.push(buildAtomicsDebug(opts));
     rollups.push(buildAtomicsMin(opts));
   }
 
@@ -36,8 +36,9 @@ function buildAtomicsDebug(opts: BuildOptions): RollupOptions {
             for (const f in bundle) {
               const b = bundle[f];
               if (b.type === 'chunk') {
-                const debugJsPath = join(opts.distLibDebugDir, 'partytown-sandbox-atomics.js');
-                await writeFile(debugJsPath, b.code);
+                const outName = `partytown-sandbox-atomics.js`;
+                await writeFile(join(opts.distLibDebugDir, outName), b.code);
+                await writeFile(join(opts.distTestsLibDebugDir, outName), b.code);
                 b.code = debugHtml;
               }
             }
@@ -51,7 +52,7 @@ function buildAtomicsDebug(opts: BuildOptions): RollupOptions {
       webWorkerBlobUrlPlugin(opts, 'atomics', true),
       watchDir(opts, join(opts.tscLibDir, 'atomics')),
       watchDir(opts, join(opts.tscLibDir, 'web-worker')),
-      copyBuildToTestSite(opts),
+      copyOutputToTests(opts),
     ],
   };
 }
@@ -94,7 +95,7 @@ function buildAtomicsMin(opts: BuildOptions): RollupOptions {
       webWorkerBlobUrlPlugin(opts, 'atomics', false),
       watchDir(opts, join(opts.tscLibDir, 'atomics')),
       watchDir(opts, join(opts.tscLibDir, 'web-worker')),
-      copyBuildToTestSite(opts),
+      copyOutputToTests(opts),
     ],
   };
 }
