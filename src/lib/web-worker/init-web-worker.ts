@@ -19,9 +19,7 @@ export const initWebWorker = (initWebWorkerData: InitWebWorkerData) => {
 
   webWorkerCtx.$postMessage$ = postMessage.bind(self);
 
-  if (!initWebWorkerData.$config$.useExternalWorker) {
-    (self as any).postMessage = (self as any).importScripts = undefined;
-  }
+  // (self as any).postMessage = (self as any).importScripts = undefined;
 
   (self as any).Node = Node;
   (self as any).Window = Window;

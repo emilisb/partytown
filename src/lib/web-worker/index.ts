@@ -35,8 +35,12 @@ const receiveMessageFromSandboxToWorker = (ev: MessageEvent<MessageFromSandboxTo
         Object.entries(windowDescriptors).forEach(([key, _property]) => {
           const skipProperties = ['constructor'];
 
-          if (!skipProperties.includes(key)) {
-            (self as any)[key] = (environments[$winId$].$window$ as any)[key];
+          if (!skipProperties.includes(key) && !(self as any)[key]) {
+            try {
+              (self as any)[key] = (environments[$winId$].$window$ as any)[key];
+            } catch (e) {
+              console.error('Error defining window property to worker scope', e);
+            }
           }
         });
       }
