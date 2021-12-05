@@ -84,7 +84,7 @@ export const defineWorkerInterface = ([
               setInstanceStateValue(
                 this,
                 memberName,
-                PropCstr ? new PropCstr(winId, instanceId, applyPath, nodeName) : undefined
+                new PropCstr(winId, instanceId, applyPath, nodeName)
               );
             }
             return getInstanceStateValue(this, memberName);

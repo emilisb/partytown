@@ -36,11 +36,9 @@ export const receiveMessageFromSandboxToServiceWorker = (ev: ExtendableMessageEv
 const sendMessageToSandboxFromServiceWorker = (accessReq: MainAccessRequest) =>
   new Promise<MainAccessResponse>(async (resolve) => {
     const clients = await (self as any as ServiceWorkerGlobalScope).clients.matchAll();
-    const client = [...clients].sort((a, b) => {
-      if (a.url > b.url) return -1;
-      if (a.url < b.url) return 1;
-      return 0;
-    })[0];
+    const client = clients.find(
+      (c) => c.url.includes('partytown-sandbox-') || c.url.includes('proxytown')
+    );
 
     if (client) {
       const timeout = debug ? 120000 : 10000;

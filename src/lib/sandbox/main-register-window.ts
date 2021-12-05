@@ -12,7 +12,7 @@ export const registerWindow = (
   $winId$: number,
   $window$: MainWindow
 ) => {
-  if (!windowIds.has($window$)) {
+  if ($window$.partytown?.useExternalWorker || !windowIds.has($window$)) {
     windowIds.set($window$, $winId$);
 
     const doc = $window$.document;
