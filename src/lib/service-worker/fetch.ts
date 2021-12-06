@@ -44,8 +44,6 @@ const sendMessageToSandboxFromServiceWorker = (accessReq: MainAccessRequest) =>
         return 0;
       })[0];
 
-    console.log('~~~ CLIENT', client, clients);
-
     if (client) {
       const timeout = debug ? 120000 : 10000;
       const msgResolve: MessageResolve = [
