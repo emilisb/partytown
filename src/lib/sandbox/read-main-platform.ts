@@ -37,6 +37,7 @@ export const readMainPlatform = (win: any) => {
     [win.history],
     [win.screen],
     [win.screen.orientation],
+    [win.visualViewport],
 
     // global constructors
     [mutationObserver, InterfaceType.EnvGlobalConstructor],
